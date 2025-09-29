@@ -34,7 +34,7 @@ let VALID_CODES = new Set();
 // Cargar automáticamente el Excel de códigos desde /samples/codigos.xlsx
 async function loadCodes(){
   try {
-    const resp = await fetch("samples/codigos.xlsx");
+    const resp = await fetch("./samples/codigos.xlsx");
     const data = await resp.arrayBuffer();
     const wb = XLSX.read(data, {type:"array"});
     const codes = new Set();
