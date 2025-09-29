@@ -32,7 +32,6 @@
     <div id="msg" class="msg"></div>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
 let VALID_CODES = new Set();
 const $msg  = document.getElementById("msg");
@@ -51,8 +50,11 @@ async function loadCodes(){
   try{
     $btn.disabled = true;
     $msg.textContent = "Cargando códigos…";
-    const resp = await fetch("codigos.xlsx", { cache: "no-store" });
-    if(!resp.ok) throw new Error(`No se encontró samples/codigos.xlsx (HTTP ${resp.status})`);
+    // ✅ ruta en la raíz del repo
+    const resp = await fetch("./codigos.xlsx", { cache: "no-store" });
+    // Alternativa absoluta (GitHub Pages):
+    // const resp = await fetch("/documento-/codigos.xlsx", { cache: "no-store" });
+    if(!resp.ok) throw new Error(`No se encontró codigos.xlsx en la raíz (HTTP ${resp.status})`);
     const data = await resp.arrayBuffer();
     const wb = XLSX.read(data, { type: "array" });
     const set = new Set();
@@ -78,7 +80,7 @@ async function loadCodes(){
     }
   }catch(err){
     console.error(err);
-    $msg.textContent = "Error cargando códigos. Revisa que exista /samples/codigos.xlsx";
+    $msg.textContent = "Error cargando códigos. Revisa que exista /codigos.xlsx en la raíz";
     $msg.classList.add("err");
   }finally{
     $btn.disabled = false;
