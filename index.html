@@ -13,19 +13,21 @@
     h1 { font-size:18px; margin:0 0 16px; text-align:center; }
     label { font-size:14px; display:block; margin-bottom:6px; color:#94a3b8; }
     input { width:100%; padding:10px; border-radius:8px; border:1px solid #1f2937;
-            background:#111827; color:#fff; }
+            background:#111827; color:#fff; letter-spacing:2px; text-align:center; }
     button { width:100%; margin-top:14px; padding:10px; border:none; border-radius:8px;
              background:#6366f1; color:white; font-weight:600; cursor:pointer; }
     button[disabled]{ opacity:.6; cursor:not-allowed; }
     .msg { margin-top:10px; font-size:13px; text-align:center; color:#a5b4fc; }
     .err { color:#ef4444; }
+    .hint { font-size:12px; color:#94a3b8; text-align:center; margin-top:6px; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Ingresa tu código</h1>
-    <label for="code">Código de ingreso</label>
-    <input id="code" type="text" placeholder="Ej: EMP-001" autocomplete="one-time-code" />
+    <label for="code">Código (6 dígitos)</label>
+    <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" maxlength="6" />
+    <div class="hint">Solo números — 6 dígitos</div>
     <button id="btn" disabled>Ingresar</button>
     <div id="msg" class="msg"></div>
   </div>
@@ -36,12 +38,15 @@ const $msg  = document.getElementById("msg");
 const $btn  = document.getElementById("btn");
 const $code = document.getElementById("code");
 
-function normalize(s){
-  return String(s || "")
-    .toUpperCase()
-    .replace(/\s+/g, ""); // quita todos los espacios
+// Deja solo dígitos
+function onlyDigits(s){ return String(s ?? "").replace(/\D+/g, ""); }
+// A 6 dígitos exactos con ceros a la izquierda
+function toSixDigits(s){
+  const d = onlyDigits(s);
+  return d.length ? d.padStart(6, "0").slice(0,6) : "";
 }
 
+// Carga XLSX y extrae valores de 6 dígitos
 async function loadCodes(){
   try {
     $btn.disabled = true;
@@ -59,20 +64,19 @@ async function loadCodes(){
       const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
       for(const row of rows){
         for(const cell of row){
-          const val = normalize(cell);
-          // omite encabezados típicos
-          if(val && val !== "CODE"){
-            codes.add(val);
-          }
+          const six = toSixDigits(cell);
+          if(six.length === 6){ codes.add(six); }
         }
       }
     });
 
     VALID_CODES = codes;
     if(VALID_CODES.size === 0){
-      $msg.textContent = "No se encontraron códigos en el Excel.";
+      $msg.textContent = "No se encontraron códigos de 6 dígitos en el Excel.";
+      $msg.classList.add("err");
     } else {
       $msg.textContent = `Códigos cargados: ${VALID_CODES.size}`;
+      $msg.classList.remove("err");
     }
   } catch(err){
     console.error(err);
@@ -83,24 +87,31 @@ async function loadCodes(){
   }
 }
 
+// Restringe input a solo números y a 6 dígitos
+$code.addEventListener("input", ()=>{
+  const cur = onlyDigits($code.value).slice(0,6);
+  $code.value = cur;
+});
+
+// Enter para enviar
+$code.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") $btn.click();
+});
+
 $btn.addEventListener("click", ()=>{
-  const code = normalize($code.value);
-  if(!code){
-    $msg.textContent = "Escribe un código.";
-    $msg.classList.remove("err");
+  const code = toSixDigits($code.value);
+  if(code.length !== 6){
+    $msg.textContent = "El código debe tener 6 dígitos.";
+    $msg.classList.add("err");
     return;
   }
   if(VALID_CODES.has(code)){
+    // Redirige pasando el código de 6 dígitos
     window.location.href = "generador.html?code=" + encodeURIComponent(code);
   } else {
     $msg.textContent = "Código inválido.";
     $msg.classList.add("err");
   }
-});
-
-// permitir ENTER para enviar
-$code.addEventListener("keydown", (e)=>{
-  if(e.key === "Enter") $btn.click();
 });
 
 loadCodes();
