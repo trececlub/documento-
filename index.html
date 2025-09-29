@@ -51,7 +51,7 @@ async function loadCodes(){
   try{
     $btn.disabled = true;
     $msg.textContent = "Cargando códigos…";
-    const resp = await fetch("./samples/codigos.xlsx", { cache: "no-store" });
+    const resp = await fetch("/documento-/samples/codigos.xlsx", { cache: "no-store" });
     if(!resp.ok) throw new Error(`No se encontró samples/codigos.xlsx (HTTP ${resp.status})`);
     const data = await resp.arrayBuffer();
     const wb = XLSX.read(data, { type: "array" });
