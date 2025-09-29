@@ -32,65 +32,62 @@
     <div id="msg" class="msg"></div>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
 let VALID_CODES = new Set();
 const $msg  = document.getElementById("msg");
 const $btn  = document.getElementById("btn");
 const $code = document.getElementById("code");
 
-// Deja solo dígitos
-function onlyDigits(s){ return String(s ?? "").replace(/\D+/g, ""); }
+// Solo dígitos
+function onlyDigits(s){ return String(s ?? "").replace(/\D+/g,""); }
 // A 6 dígitos exactos con ceros a la izquierda
 function toSixDigits(s){
   const d = onlyDigits(s);
-  return d.length ? d.padStart(6, "0").slice(0,6) : "";
+  return d.length ? d.padStart(6,"0").slice(0,6) : "";
 }
 
-// Carga XLSX y extrae valores de 6 dígitos
 async function loadCodes(){
-  try {
+  try{
     $btn.disabled = true;
     $msg.textContent = "Cargando códigos…";
     const resp = await fetch("./samples/codigos.xlsx", { cache: "no-store" });
-    if(!resp.ok){
-      throw new Error(`No se encontró samples/codigos.xlsx (HTTP ${resp.status})`);
-    }
+    if(!resp.ok) throw new Error(`No se encontró samples/codigos.xlsx (HTTP ${resp.status})`);
     const data = await resp.arrayBuffer();
-    const wb = XLSX.read(data, {type:"array"});
-    const codes = new Set();
+    const wb = XLSX.read(data, { type: "array" });
+    const set = new Set();
 
     wb.SheetNames.forEach(name=>{
-      const ws = wb.Sheets[name];
-      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+      const ws   = wb.Sheets[name];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
       for(const row of rows){
         for(const cell of row){
           const six = toSixDigits(cell);
-          if(six.length === 6){ codes.add(six); }
+          if(six.length === 6) set.add(six);
         }
       }
     });
 
-    VALID_CODES = codes;
+    VALID_CODES = set;
     if(VALID_CODES.size === 0){
       $msg.textContent = "No se encontraron códigos de 6 dígitos en el Excel.";
       $msg.classList.add("err");
-    } else {
+    }else{
       $msg.textContent = `Códigos cargados: ${VALID_CODES.size}`;
       $msg.classList.remove("err");
     }
-  } catch(err){
+  }catch(err){
     console.error(err);
     $msg.textContent = "Error cargando códigos. Revisa que exista /samples/codigos.xlsx";
     $msg.classList.add("err");
-  } finally {
+  }finally{
     $btn.disabled = false;
   }
 }
 
-// Restringe input a solo números y a 6 dígitos
+// Restringe el input a 6 dígitos
 $code.addEventListener("input", ()=>{
-  const cur = onlyDigits($code.value).slice(0,6);
-  $code.value = cur;
+  $code.value = onlyDigits($code.value).slice(0,6);
 });
 
 // Enter para enviar
@@ -106,9 +103,8 @@ $btn.addEventListener("click", ()=>{
     return;
   }
   if(VALID_CODES.has(code)){
-    // Redirige pasando el código de 6 dígitos
     window.location.href = "generador.html?code=" + encodeURIComponent(code);
-  } else {
+  }else{
     $msg.textContent = "Código inválido.";
     $msg.classList.add("err");
   }
