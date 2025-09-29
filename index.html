@@ -16,53 +16,91 @@
             background:#111827; color:#fff; }
     button { width:100%; margin-top:14px; padding:10px; border:none; border-radius:8px;
              background:#6366f1; color:white; font-weight:600; cursor:pointer; }
-    .msg { margin-top:10px; font-size:13px; text-align:center; }
+    button[disabled]{ opacity:.6; cursor:not-allowed; }
+    .msg { margin-top:10px; font-size:13px; text-align:center; color:#a5b4fc; }
+    .err { color:#ef4444; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Ingresa tu código</h1>
     <label for="code">Código de ingreso</label>
-    <input id="code" type="text" placeholder="Ej: EMP-001"/>
-    <button id="btn">Ingresar</button>
+    <input id="code" type="text" placeholder="Ej: EMP-001" autocomplete="one-time-code" />
+    <button id="btn" disabled>Ingresar</button>
     <div id="msg" class="msg"></div>
   </div>
 
 <script>
 let VALID_CODES = new Set();
+const $msg  = document.getElementById("msg");
+const $btn  = document.getElementById("btn");
+const $code = document.getElementById("code");
 
-// Cargar automáticamente el Excel de códigos desde /samples/codigos.xlsx
+function normalize(s){
+  return String(s || "")
+    .toUpperCase()
+    .replace(/\s+/g, ""); // quita todos los espacios
+}
+
 async function loadCodes(){
   try {
-    const resp = await fetch("./samples/codigos.xlsx");
+    $btn.disabled = true;
+    $msg.textContent = "Cargando códigos…";
+    const resp = await fetch("./samples/codigos.xlsx", { cache: "no-store" });
+    if(!resp.ok){
+      throw new Error(`No se encontró samples/codigos.xlsx (HTTP ${resp.status})`);
+    }
     const data = await resp.arrayBuffer();
     const wb = XLSX.read(data, {type:"array"});
     const codes = new Set();
+
     wb.SheetNames.forEach(name=>{
       const ws = wb.Sheets[name];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
       for(const row of rows){
         for(const cell of row){
-          const val = String(cell||"").trim();
-          if(val) codes.add(val);
+          const val = normalize(cell);
+          // omite encabezados típicos
+          if(val && val !== "CODE"){
+            codes.add(val);
+          }
         }
       }
     });
+
     VALID_CODES = codes;
+    if(VALID_CODES.size === 0){
+      $msg.textContent = "No se encontraron códigos en el Excel.";
+    } else {
+      $msg.textContent = `Códigos cargados: ${VALID_CODES.size}`;
+    }
   } catch(err){
-    document.getElementById("msg").textContent = "Error cargando códigos.";
     console.error(err);
+    $msg.textContent = "Error cargando códigos. Revisa que exista /samples/codigos.xlsx";
+    $msg.classList.add("err");
+  } finally {
+    $btn.disabled = false;
   }
 }
 
-document.getElementById("btn").addEventListener("click", ()=>{
-  const code = document.getElementById("code").value.trim();
-  if(!code){ document.getElementById("msg").textContent="Escribe un código."; return; }
+$btn.addEventListener("click", ()=>{
+  const code = normalize($code.value);
+  if(!code){
+    $msg.textContent = "Escribe un código.";
+    $msg.classList.remove("err");
+    return;
+  }
   if(VALID_CODES.has(code)){
     window.location.href = "generador.html?code=" + encodeURIComponent(code);
   } else {
-    document.getElementById("msg").textContent="Código inválido.";
+    $msg.textContent = "Código inválido.";
+    $msg.classList.add("err");
   }
+});
+
+// permitir ENTER para enviar
+$code.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") $btn.click();
 });
 
 loadCodes();
