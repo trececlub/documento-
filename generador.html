@@ -366,6 +366,115 @@ $btnExp.addEventListener('click', ()=>{
   if(codeParam){ $code.value = codeParam; $code.readOnly = true; }
   renderPreview();
 })();
+  <script>
+// === MODO CALIBRACIÓN CON TECLAS ===
+// Requiere: DEBUG = true y drawDebugBoxes() ya llamado en renderPreview()
+
+let _tuneIndex = 0;
+function _fieldKeys() {
+  return Object.keys(currentTpl.fields);
+}
+function tune(fieldName) {
+  const keys = _fieldKeys();
+  if (!keys.length) return alert("No hay fields en la plantilla.");
+  if (fieldName) {
+    const i = keys.indexOf(fieldName);
+    if (i >= 0) _tuneIndex = i;
+  }
+  const k = keys[_tuneIndex];
+  const spec = currentTpl.fields[k];
+  console.log(`🎯 Tunear: ${k}`, spec);
+  // resalta campo actual dibujando de nuevo
+  renderPreview();
+  // marca visual rápida
+  const fontPx = parseInt((spec.font.match(/(\d+)px/)||[])[1]||'24',10);
+  ctx.save();
+  ctx.strokeStyle = '#f59e0b'; // ámbar para campo activo
+  ctx.lineWidth = 2;
+  const h = fontPx + 6;
+  const w = spec.maxW || 120;
+  ctx.strokeRect(spec.x, spec.y, w, h);
+  ctx.restore();
+  return k;
+}
+function _nextField() {
+  const keys = _fieldKeys();
+  if (!keys.length) return;
+  _tuneIndex = (_tuneIndex + 1) % keys.length;
+  tune();
+}
+function _logSpec() {
+  const k = _fieldKeys()[_tuneIndex];
+  console.log(`📎 ${k}:`, JSON.stringify(currentTpl.fields[k], null, 2));
+}
+function _logAll() {
+  console.log("📌 Copia esto dentro de TEMPLATES.fields:");
+  console.log(JSON.stringify(currentTpl.fields, null, 2));
+}
+window.tune = tune;        // usa tune('surname') por ejemplo
+window.tuneNext = _nextField;
+window.tunePrint = _logSpec;
+window.tunePrintAll = _logAll;
+
+// Teclado
+window.addEventListener('keydown', (e)=>{
+  const keys = _fieldKeys();
+  if (!keys.length) return;
+  const k = keys[_tuneIndex];
+  const s = currentTpl.fields[k];
+  const step = e.shiftKey ? 10 : 1;
+
+  let changed = false;
+
+  switch(e.key){
+    case 'ArrowLeft':  s.x = Math.max(0, s.x - step); changed = true; break;
+    case 'ArrowRight': s.x = s.x + step; changed = true; break;
+    case 'ArrowUp':    s.y = Math.max(0, s.y - step); changed = true; break;
+    case 'ArrowDown':  s.y = s.y + step; changed = true; break;
+
+    case '[': s.maxW = Math.max(20, (s.maxW||120) - step); changed = true; break;
+    case ']': s.maxW = (s.maxW||120) + step; changed = true; break;
+
+    case '+':
+    case '=': {
+      const m = s.font.match(/(\d+)px/);
+      const px = m ? parseInt(m[1],10) : 24;
+      s.font = s.font.replace(/(\d+)px/,(px+1)+'px');
+      changed = true; break;
+    }
+    case '-': {
+      const m = s.font.match(/(\d+)px/);
+      const px = m ? parseInt(m[1],10) : 24;
+      s.font = s.font.replace(/(\d+)px/,(Math.max(6,px-1))+'px');
+      changed = true; break;
+    }
+
+    case 'p':
+    case 'P':
+      _nextField();
+      return;
+
+    case 'Enter':
+      _logSpec();
+      return;
+
+    // Ctrl+S o Cmd+S → imprime todo (no bloquea guardado del navegador)
+    case 's':
+    case 'S':
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        _logAll();
+        return;
+      }
+      break;
+  }
+
+  if (changed) {
+    renderPreview();
+    // remarcar actual
+    setTimeout(()=> tune(), 0);
+  }
+});
 </script>
 </body>
 </html>
