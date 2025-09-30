@@ -47,7 +47,7 @@
           <input id="f-given" type="text" placeholder="Nombre"/>
 
           <label>Code</label>
-          <input id="f-code" type="text" placeholder="Código interno"/>
+          <input id="f-code" type="text" placeholder="USCIS CODE"/>
 
           <label>Category</label>
           <select id="f-category">
@@ -135,9 +135,9 @@ const PAISES = [
 // ⚠️ Cambia las rutas src por tus imágenes reales en ./templates/
 const TEMPLATES = [
   {
-    id:"empleado_frente", label:"Empleado — Frente",
+    id:"card", label:"card",
     width:1011, height:638,
-    src:"./templates/empleado_frente.png",
+    src:"./templates/card.png",
     fields:{
       surname:{x:290,y:190,maxW:620,font:"bold 36px Inter, system-ui",color:"#111",align:"left"},
       given:{x:290,y:238,maxW:620,font:"600 34px Inter, system-ui",color:"#222",align:"left"},
@@ -152,9 +152,9 @@ const TEMPLATES = [
     photo:{x:64,y:170,w:188,h:248,radius:12}
   },
   {
-    id:"contratista_frente", label:"Contratista — Frente",
+    id:"social", label:"social",
     width:1011, height:638,
-    src:"./templates/contratista_frente.png",
+    src:"./templates/social.png",
     fields:{
       surname:{x:300,y:200,maxW:620,font:"bold 36px Inter, system-ui",color:"#111",align:"left"},
       given:{x:300,y:248,maxW:620,font:"600 34px Inter, system-ui",color:"#222",align:"left"},
