@@ -29,6 +29,7 @@
     .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
     .sep{height:1px; background:#1f2937; margin:14px 0}
     .link{color:#a5b4fc; text-decoration:none}
+    code{background:#0b1220; padding:1px 6px; border-radius:6px; border:1px solid #1f2937}
   </style>
 </head>
 <body>
@@ -99,7 +100,7 @@
           <h2 style="margin-top:18px">Plantilla</h2>
           <label>Tipo de documento</label>
           <select id="tpl-select"></select>
-          <p class="hint">Las plantillas se leen de <code>./templates/</code>. Ajusta coordenadas en <code>TEMPLATES</code>.</p>
+          <p id="tpl-status" class="hint"></p>
 
           <div class="sep"></div>
           <label>Nombre de salida</label>
@@ -118,24 +119,18 @@
   </div>
 
 <script>
-/*************************
- * UTIL — leer parámetro code de la URL
- *************************/
+/************** UTIL: query **************/
 function getQueryParam(name){
   return new URLSearchParams(window.location.search).get(name);
 }
 
-/*************************
- * CONFIGURACIÓN
- *************************/
-const PAISES = [
-  "Afganistán","Albania","Alemania","Andorra","Angola","Antigua y Barbuda","Arabia Saudita","Argelia","Argentina","Armenia","Australia","Austria","Azerbaiyán","Bahamas","Bangladés","Barbados","Baréin","Bélgica","Belice","Benín","Bielorrusia","Bolivia","Bosnia y Herzegovina","Botsuana","Brasil","Brunéi","Bulgaria","Burkina Faso","Burundi","Bután","Cabo Verde","Camboya","Camerún","Canadá","Catar","Chad","Chile","China","Chipre","Colombia","Comoras","Corea del Norte","Corea del Sur","Costa de Marfil","Costa Rica","Croacia","Cuba","Dinamarca","Dominica","Ecuador","Egipto","El Salvador","Emiratos Árabes Unidos","Eritrea","Eslovaquia","Eslovenia","España","Estados Unidos","Estonia","Esuatini","Etiopía","Filipinas","Finlandia","Fiyi","Francia","Gabón","Gambia","Georgia","Ghana","Granada","Grecia","Guatemala","Guinea","Guinea-Bisáu","Guinea Ecuatorial","Guyana","Haití","Honduras","Hungría","India","Indonesia","Irak","Irán","Irlanda","Islandia","Islas Marshall","Islas Salomón","Israel","Italia","Jamaica","Japón","Jordania","Kazajistán","Kenia","Kirguistán","Kiribati","Kuwait","Laos","Lesoto","Letonia","Líbano","Liberia","Libia","Liechtenstein","Lituania","Luxemburgo","Madagascar","Malasia","Malaui","Maldivas","Malí","Malta","Marruecos","Mauricio","Mauritania","México","Micronesia","Moldavia","Mónaco","Mongolia","Montenegro","Mozambique","Namibia","Nauru","Nepal","Nicaragua","Níger","Nigeria","Noruega","Nueva Zelanda","Omán","Países Bajos","Pakistán","Palaos","Panamá","Papúa Nueva Guinea","Paraguay","Perú","Polonia","Portugal","Reino Unido","República Centroafricana","República Checa","República del Congo","República Democrática del Congo","República Dominicana","Ruanda","Rumanía","Rusia","Samoa","San Cristóbal y Nieves","San Marino","San Vicente y las Granadinas","Santa Lucía","Santo Tomé y Príncipe","Senegal","Serbia","Seychelles","Sierra Leona","Singapur","Siria","Somalia","Sri Lanka","Sudáfrica","Sudán","Sudán del Sur","Suecia","Suiza","Surinam","Tailandia","Tanzania","Tayikistán","Timor Oriental","Togo","Tonga","Trinidad y Tobago","Túnez","Turkmenistán","Turquía","Tuvalu","Ucrania","Uganda","Uruguay","Uzbekistán","Vanuatu","Vaticano","Venezuela","Vietnam","Yemen","Yibuti","Zambia","Zimbabue"
-];
+/************** CONFIG **************/
+const PAISES = [ "Afganistán","Albania","Alemania","Andorra","Angola","Antigua y Barbuda","Arabia Saudita","Argelia","Argentina","Armenia","Australia","Austria","Azerbaiyán","Bahamas","Bangladés","Barbados","Baréin","Bélgica","Belice","Benín","Bielorrusia","Bolivia","Bosnia y Herzegovina","Botsuana","Brasil","Brunéi","Bulgaria","Burkina Faso","Burundi","Bután","Cabo Verde","Camboya","Camerún","Canadá","Catar","Chad","Chile","China","Chipre","Colombia","Comoras","Corea del Norte","Corea del Sur","Costa de Marfil","Costa Rica","Croacia","Cuba","Dinamarca","Dominica","Ecuador","Egipto","El Salvador","Emiratos Árabes Unidos","Eritrea","Eslovaquia","Eslovenia","España","Estados Unidos","Estonia","Esuatini","Etiopía","Filipinas","Finlandia","Fiyi","Francia","Gabón","Gambia","Georgia","Ghana","Granada","Grecia","Guatemala","Guinea","Guinea-Bisáu","Guinea Ecuatorial","Guyana","Haití","Honduras","Hungría","India","Indonesia","Irak","Irán","Irlanda","Islandia","Islas Marshall","Islas Salomón","Israel","Italia","Jamaica","Japón","Jordania","Kazajistán","Kenia","Kirguistán","Kiribati","Kuwait","Laos","Lesoto","Letonia","Líbano","Liberia","Libia","Liechtenstein","Lituania","Luxemburgo","Madagascar","Malasia","Malaui","Maldivas","Malí","Malta","Marruecos","Mauricio","Mauritania","México","Micronesia","Moldavia","Mónaco","Mongolia","Montenegro","Mozambique","Namibia","Nauru","Nepal","Nicaragua","Níger","Nigeria","Noruega","Nueva Zelanda","Omán","Países Bajos","Pakistán","Palaos","Panamá","Papúa Nueva Guinea","Paraguay","Perú","Polonia","Portugal","Reino Unido","República Centroafricana","República Checa","República del Congo","República Democrática del Congo","República Dominicana","Ruanda","Rumanía","Rusia","Samoa","San Cristóbal y Nieves","San Marino","San Vicente y las Granadinas","Santa Lucía","Santo Tomé y Príncipe","Senegal","Serbia","Seychelles","Sierra Leona","Singapur","Siria","Somalia","Sri Lanka","Sudáfrica","Sudán","Sudán del Sur","Suecia","Suiza","Surinam","Tailandia","Tanzania","Tayikistán","Timor Oriental","Togo","Tonga","Trinidad y Tobago","Túnez","Turkmenistán","Turquía","Tuvalu","Ucrania","Uganda","Uruguay","Uzbekistán","Vanuatu","Vaticano","Venezuela","Vietnam","Yemen","Yibuti","Zambia","Zimbabue" ];
 
-// ⚠️ Cambia las rutas src por tus imágenes reales en ./templates/
+/* ⚠️ Ajusta nombres/formatos reales de tus imágenes en /templates/ */
 const TEMPLATES = [
   {
-    id:"card", label:"card",
+    id:"card", label:"Card (frente)",
     width:1011, height:638,
     src:"./templates/card.png",
     fields:{
@@ -146,13 +141,13 @@ const TEMPLATES = [
       country:{x:290,y:382,maxW:620,font:"500 26px Inter, system-ui",color:"#333",align:"left"},
       dob:{x:290,y:430,maxW:300,font:"500 26px Inter, system-ui",color:"#333",align:"left"},
       sex:{x:620,y:430,maxW:120,font:"700 26px Inter, system-ui",color:"#111",align:"left"},
-      since:{x:290,y:478,maxW:300,font:"500 24px Inter, system-ui",color:"#333",align:"left"},
-      exp:{x:620,y:478,maxW:300,font:"700 24px Inter, system-ui",color:"#b91c1c",align:"left"}
+      exp:{x:620,y:520,maxW:300,font:"700 24px Inter, system-ui",color:"#b91c1c",align:"left"},
+      since:{x:290,y:566,maxW:300,font:"500 24px Inter, system-ui",color:"#333",align:"left"}
     },
     photo:{x:64,y:170,w:188,h:248,radius:12}
   },
   {
-    id:"social", label:"social",
+    id:"social", label:"Social (frente)",
     width:1011, height:638,
     src:"./templates/social.png",
     fields:{
@@ -163,23 +158,18 @@ const TEMPLATES = [
       country:{x:300,y:392,maxW:620,font:"500 26px Inter, system-ui",color:"#333",align:"left"},
       dob:{x:300,y:440,maxW:300,font:"500 26px Inter, system-ui",color:"#333",align:"left"},
       sex:{x:630,y:440,maxW:120,font:"700 26px Inter, system-ui",color:"#111",align:"left"},
-      since:{x:300,y:488,maxW:300,font:"500 24px Inter, system-ui",color:"#333",align:"left"},
-      exp:{x:630,y:488,maxW:300,font:"700 24px Inter, system-ui",color:"#b91c1c",align:"left"}
+      exp:{x:630,y:528,maxW:300,font:"700 24px Inter, system-ui",color:"#b91c1c",align:"left"},
+      since:{x:300,y:574,maxW:300,font:"500 24px Inter, system-ui",color:"#333",align:"left"}
     },
     photo:{x:70,y:180,w:188,h:248,radius:12}
   }
 ];
 
-/*************************
- * ESTADO
- *************************/
+/************** ESTADO + DOM **************/
 let currentTpl = TEMPLATES[0];
 let tplImage = new Image();
 let photoImage = null;
 
-/*************************
- * DOM
- *************************/
 const $tplSelect = document.getElementById('tpl-select');
 const $canvas = document.getElementById('canvas');
 const ctx = $canvas.getContext('2d');
@@ -199,37 +189,32 @@ const $btnExp  = document.getElementById('btn-export');
 const $outName = document.getElementById('out-name');
 const $jpgQ    = document.getElementById('jpg-quality');
 const $appMsg  = document.getElementById('app-msg');
+const $tplStatus = document.getElementById('tpl-status');
 
-/*************************
- * DEBUG (ver cajas para alinear)
- *************************/
-const DEBUG = true; // pon en false cuando termines de calibrar
+/************** DEBUG **************/
+const DEBUG = true; // pon en false al terminar
 
 function drawDebugBoxes(){
   if(!DEBUG) return;
   ctx.save();
-  // Foto en morado
   if(currentTpl.photo){
     const p = currentTpl.photo;
     ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 2;
     ctx.strokeRect(p.x, p.y, p.w, p.h);
   }
-  // Cajas de texto en verde
   const f = currentTpl.fields;
   ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2;
   for(const k of Object.keys(f)){
     const s = f[k];
     const fontPx = parseInt((s.font.match(/(\d+)px/)||[])[1]||'24',10);
-    const h = fontPx + 6;                 // alto aprox
+    const h = fontPx + 6;
     const w = s.maxW || Math.max(80, ctx.measureText('MMMMMMMM').width);
-    ctx.strokeRect(s.x, s.y, w, h);       // ahora y es borde superior
+    ctx.strokeRect(s.x, s.y, w, h);
   }
   ctx.restore();
 }
 
-/*************************
- * UTILS
- *************************/
+/************** UTILS DRAW **************/
 function setText(el, txt){ el.textContent = txt; }
 function fmtDate(iso){
   if(!iso) return "";
@@ -270,7 +255,7 @@ function drawText(ctx, spec, text){
   ctx.font = spec.font;
   ctx.fillStyle = spec.color;
   ctx.textAlign = spec.align || 'left';
-  ctx.textBaseline = 'top'; // ← Y es borde superior de la caja
+  ctx.textBaseline = 'top'; // y = borde superior
   let t = text;
   if(spec.maxW){
     while(t.length && ctx.measureText(t).width > spec.maxW){ t = t.slice(0, -1); }
@@ -284,38 +269,76 @@ function downloadJPG(canvas, filename, quality=0.92){
   document.body.appendChild(a); a.click(); a.remove();
 }
 
-/*************************
- * INIT
- *************************/
+/************** SELECT + LOADERS **************/
 function fillCountries(){
   $country.innerHTML = '';
-  for(const p of PAISES){ const opt = document.createElement('option'); opt.value = p; opt.textContent = p; $country.appendChild(opt); }
+  for(const p of PAISES){
+    const opt = document.createElement('option');
+    opt.value = p; opt.textContent = p;
+    $country.appendChild(opt);
+  }
 }
 function fillTemplates(){
-  $tplSelect.innerHTML='';
-  TEMPLATES.forEach(t=>{ const opt=document.createElement('option'); opt.value=t.id; opt.textContent=t.label; $tplSelect.appendChild(opt); });
+  $tplSelect.innerHTML = '';
+  if (!Array.isArray(TEMPLATES) || TEMPLATES.length === 0){
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = '— Sin plantillas —';
+    opt.disabled = true; opt.selected = true;
+    $tplSelect.appendChild(opt);
+    $tplSelect.disabled = true;
+    return;
+  }
+  TEMPLATES.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.label || t.id;
+    $tplSelect.appendChild(opt);
+  });
+  $tplSelect.disabled = false;
   $tplSelect.value = TEMPLATES[0].id;
 }
 function getTemplateById(id){ return TEMPLATES.find(t=>t.id===id) || TEMPLATES[0]; }
-function loadTemplateImage(){
-  return new Promise(res=>{
-    tplImage = new Image();
-    tplImage.crossOrigin='anonymous';
-    tplImage.onload = () => {
-      // Ajusta el canvas al tamaño REAL de la imagen de plantilla
-      currentTpl.width  = tplImage.naturalWidth;
-      currentTpl.height = tplImage.naturalHeight;
-      res();
-    };
-    tplImage.src = currentTpl.src;
+
+function tryLoadImage(url){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=> resolve(img);
+    img.onerror = ()=> reject(new Error("No se pudo cargar: " + url));
+    img.src = url + (url.includes("?") ? "&" : "?") + "v=" + Date.now(); // anti-caché
   });
 }
+async function loadTemplateImage(){
+  const src = currentTpl.src;
+  const fname = src.split("/").pop();
+  const candidates = [
+    src,                                  // como está en TEMPLATES
+    `/documento-/templates/${fname}`,     // absoluta para GitHub Pages
+    `./templates/${fname}`                // relativa
+  ];
+  let lastErr = null;
+  for (const url of candidates){
+    try{
+      const img = await tryLoadImage(url);
+      tplImage = img;
+      currentTpl.width  = img.naturalWidth;
+      currentTpl.height = img.naturalHeight;
+      if($tplStatus) $tplStatus.textContent = `✅ Plantilla cargada: ${fname} — ${img.naturalWidth}×${img.naturalHeight}px`;
+      return;
+    }catch(e){
+      lastErr = e;
+      console.warn(e.message);
+    }
+  }
+  if($tplStatus) $tplStatus.textContent = `❌ No se pudo cargar "${fname}". Revisa nombre/extensión en /templates/. Último error: ${lastErr?.message||''}`;
+  throw lastErr || new Error("Fallo al cargar plantilla");
+}
+
+/************** RENDER **************/
 async function renderPreview(){
   if($canvas.width!==currentTpl.width || $canvas.height!==currentTpl.height){
     $canvas.width=currentTpl.width; $canvas.height=currentTpl.height;
   }
   ctx.clearRect(0,0,$canvas.width,$canvas.height);
-  ctx.drawImage(tplImage,0,0,$canvas.width,$canvas.height);
+  if(tplImage?.naturalWidth) ctx.drawImage(tplImage,0,0,$canvas.width,$canvas.height);
   if(photoImage){ const p=currentTpl.photo; drawRoundedImage(ctx, photoImage, p.x,p.y,p.w,p.h,p.radius||0); }
   const f=currentTpl.fields;
   drawText(ctx, f.surname,  ($surname.value||'').toUpperCase());
@@ -325,19 +348,23 @@ async function renderPreview(){
   drawText(ctx, f.country,  $country.value||'');
   drawText(ctx, f.dob,      fmtDate($dob.value));
   drawText(ctx, f.sex,      ($sex.value||'').toUpperCase());
-  drawText(ctx, f.since,    fmtDate($since.value));
-  drawText(ctx, f.exp,      fmtDate($exp.value));
-  drawDebugBoxes(); // ← guía visual para alinear
+  drawText(ctx, f.exp,      fmtDate($exp.value));   // exp arriba
+  drawText(ctx, f.since,    fmtDate($since.value)); // since debajo
+  drawDebugBoxes();
   setText($appMsg, 'Vista previa actualizada');
 }
 
-/*************************
- * EVENTOS
- *************************/
+/************** EVENTOS UI **************/
 $tplSelect.addEventListener('change', async ()=>{
-  currentTpl=getTemplateById($tplSelect.value);
-  await loadTemplateImage();
-  renderPreview();
+  try{
+    currentTpl=getTemplateById($tplSelect.value);
+    await loadTemplateImage();
+    renderPreview();
+  }catch(e){
+    console.warn('No se pudo cargar esta plantilla:', e);
+    ctx.clearRect(0,0,$canvas.width,$canvas.height);
+    setText($appMsg, 'No se pudo cargar la plantilla seleccionada. Revisa /templates/.');
+  }
 });
 $photo.addEventListener('change', (e)=>{
   const file=e.target.files[0];
@@ -353,28 +380,28 @@ $btnExp.addEventListener('click', ()=>{
   const q=parseFloat($jpgQ.value||'0.92')||0.92;
   downloadJPG($canvas,name,q);
 });
-[$surname,$given,$code,$category,$country,$dob,$sex,$since,$exp].forEach(el=>{ el.addEventListener('input', ()=>renderPreview()); });
+[$surname,$given,$code,$category,$country,$dob,$sex,$since,$exp].forEach(el=> el.addEventListener('input', ()=>renderPreview()) );
 
-// Boot
+/************** INIT **************/
 (async function init(){
   fillCountries();
   fillTemplates();
-  currentTpl = TEMPLATES[0];
-  await loadTemplateImage();
+  currentTpl = getTemplateById($tplSelect.value || TEMPLATES[0]?.id);
+  try{
+    await loadTemplateImage();
+  }catch(e){
+    // sigue con lienzo en blanco para permitir cambiar plantilla
+  }
   // Precargar CODE desde ?code=
   const codeParam = getQueryParam('code');
-  if(codeParam){ $code.value = codeParam; $code.readOnly = true; }
+  if(codeParam){ document.getElementById('f-code').value = codeParam; document.getElementById('f-code').readOnly = true; }
   renderPreview();
 })();
-  <script>
-// === MODO CALIBRACIÓN CON TECLAS ===
-// Requiere: DEBUG = true y drawDebugBoxes() ya llamado en renderPreview()
 
+/************** MODO CALIBRACIÓN CON TECLAS **************/
 let _tuneIndex = 0;
-function _fieldKeys() {
-  return Object.keys(currentTpl.fields);
-}
-function tune(fieldName) {
+function _fieldKeys(){ return Object.keys(currentTpl.fields); }
+function tune(fieldName){
   const keys = _fieldKeys();
   if (!keys.length) return alert("No hay fields en la plantilla.");
   if (fieldName) {
@@ -384,46 +411,25 @@ function tune(fieldName) {
   const k = keys[_tuneIndex];
   const spec = currentTpl.fields[k];
   console.log(`🎯 Tunear: ${k}`, spec);
-  // resalta campo actual dibujando de nuevo
   renderPreview();
-  // marca visual rápida
   const fontPx = parseInt((spec.font.match(/(\d+)px/)||[])[1]||'24',10);
   ctx.save();
-  ctx.strokeStyle = '#f59e0b'; // ámbar para campo activo
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
   const h = fontPx + 6;
   const w = spec.maxW || 120;
   ctx.strokeRect(spec.x, spec.y, w, h);
   ctx.restore();
   return k;
 }
-function _nextField() {
-  const keys = _fieldKeys();
-  if (!keys.length) return;
-  _tuneIndex = (_tuneIndex + 1) % keys.length;
-  tune();
-}
-function _logSpec() {
-  const k = _fieldKeys()[_tuneIndex];
-  console.log(`📎 ${k}:`, JSON.stringify(currentTpl.fields[k], null, 2));
-}
-function _logAll() {
-  console.log("📌 Copia esto dentro de TEMPLATES.fields:");
-  console.log(JSON.stringify(currentTpl.fields, null, 2));
-}
-window.tune = tune;        // usa tune('surname') por ejemplo
-window.tuneNext = _nextField;
-window.tunePrint = _logSpec;
-window.tunePrintAll = _logAll;
+function tuneNext(){ const keys=_fieldKeys(); if(!keys.length) return; _tuneIndex = (_tuneIndex+1)%keys.length; tune(); }
+function tunePrint(){ const k=_fieldKeys()[_tuneIndex]; console.log(`📎 ${k}:`, JSON.stringify(currentTpl.fields[k], null, 2)); }
+function tunePrintAll(){ console.log("📌 Copia esto dentro de TEMPLATES.fields:"); console.log(JSON.stringify(currentTpl.fields, null, 2)); }
+window.tune = tune; window.tuneNext = tuneNext; window.tunePrint = tunePrint; window.tunePrintAll = tunePrintAll;
 
-// Teclado
 window.addEventListener('keydown', (e)=>{
-  const keys = _fieldKeys();
-  if (!keys.length) return;
-  const k = keys[_tuneIndex];
-  const s = currentTpl.fields[k];
+  const keys = _fieldKeys(); if (!keys.length) return;
+  const k = keys[_tuneIndex]; const s = currentTpl.fields[k];
   const step = e.shiftKey ? 10 : 1;
-
   let changed = false;
 
   switch(e.key){
@@ -431,49 +437,24 @@ window.addEventListener('keydown', (e)=>{
     case 'ArrowRight': s.x = s.x + step; changed = true; break;
     case 'ArrowUp':    s.y = Math.max(0, s.y - step); changed = true; break;
     case 'ArrowDown':  s.y = s.y + step; changed = true; break;
-
     case '[': s.maxW = Math.max(20, (s.maxW||120) - step); changed = true; break;
     case ']': s.maxW = (s.maxW||120) + step; changed = true; break;
-
     case '+':
     case '=': {
-      const m = s.font.match(/(\d+)px/);
-      const px = m ? parseInt(m[1],10) : 24;
-      s.font = s.font.replace(/(\d+)px/,(px+1)+'px');
-      changed = true; break;
+      const m = s.font.match(/(\d+)px/); const px = m ? parseInt(m[1],10) : 24;
+      s.font = s.font.replace(/(\d+)px/,(px+1)+'px'); changed = true; break;
     }
     case '-': {
-      const m = s.font.match(/(\d+)px/);
-      const px = m ? parseInt(m[1],10) : 24;
-      s.font = s.font.replace(/(\d+)px/,(Math.max(6,px-1))+'px');
-      changed = true; break;
+      const m = s.font.match(/(\d+)px/); const px = m ? parseInt(m[1],10) : 24;
+      s.font = s.font.replace(/(\d+)px/,(Math.max(6,px-1))+'px'); changed = true; break;
     }
-
-    case 'p':
-    case 'P':
-      _nextField();
-      return;
-
-    case 'Enter':
-      _logSpec();
-      return;
-
-    // Ctrl+S o Cmd+S → imprime todo (no bloquea guardado del navegador)
-    case 's':
-    case 'S':
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        _logAll();
-        return;
-      }
+    case 'p': case 'P': tuneNext(); return;
+    case 'Enter':      tunePrint(); return;
+    case 's': case 'S':
+      if (e.ctrlKey || e.metaKey) { e.preventDefault(); tunePrintAll(); return; }
       break;
   }
-
-  if (changed) {
-    renderPreview();
-    // remarcar actual
-    setTimeout(()=> tune(), 0);
-  }
+  if (changed) { renderPreview(); setTimeout(()=> tune(), 0); }
 });
 </script>
 </body>
