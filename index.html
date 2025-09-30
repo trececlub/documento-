@@ -4,115 +4,267 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ingreso — Generador de ID</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+  <meta name="color-scheme" content="dark">
   <style>
-    body { font-family: system-ui, sans-serif; background:#0b1220; color:#e2e8f0;
-           display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-    .card { background:#0f172a; padding:24px; border-radius:12px; width:320px;
-            box-shadow:0 4px 12px rgba(0,0,0,.4); }
-    h1 { font-size:18px; margin:0 0 16px; text-align:center; }
-    label { font-size:14px; display:block; margin-bottom:6px; color:#94a3b8; }
-    input { width:100%; padding:10px; border-radius:8px; border:1px solid #1f2937;
-            background:#111827; color:#fff; letter-spacing:2px; text-align:center; }
-    button { width:100%; margin-top:14px; padding:10px; border:none; border-radius:8px;
-             background:#6366f1; color:white; font-weight:600; cursor:pointer; }
-    button[disabled]{ opacity:.6; cursor:not-allowed; }
-    .msg { margin-top:10px; font-size:13px; text-align:center; color:#a5b4fc; }
-    .err { color:#ef4444; }
-    .hint { font-size:12px; color:#94a3b8; text-align:center; margin-top:6px; }
+    :root{
+      --bg:#070c16; --panel:#0f172a; --text:#e2e8f0; --muted:#94a3b8;
+      --brandA:#7c3aed; --brandB:#22d3ee; --brandC:#6366f1;
+      --ok:#22c55e; --err:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text); font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif;
+      background:
+        radial-gradient(1200px 900px at 20% 10%, #1e293b 0%, #0b1220 45%, var(--bg) 100%),
+        linear-gradient(180deg, #090e1a, #05070d);
+      display:flex; align-items:center; justify-content:center; padding:24px; overflow:hidden;
+    }
+
+    /* --- Partículas de fondo (suaves) --- */
+    canvas#fx{ position:fixed; inset:0; z-index:0; opacity:.35; }
+
+    /* --- Contenedor principal --- */
+    main.card{
+      position:relative; z-index:1;
+      width:min(520px, 94vw);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid rgba(148,163,184,.22);
+      border-radius:20px; padding:20px 18px 18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+      backdrop-filter: blur(8px);
+    }
+
+    /* --- LOGO ANIMADO --- */
+    .logo-wrap{ display:flex; align-items:center; justify-content:center; margin-bottom:6px; }
+    .logo{
+      width: min(460px, 90vw);
+      height: 88px;
+      filter: drop-shadow(0 0 14px rgba(124,58,237,.35));
+    }
+    /* Degradado animado para el texto */
+    .logo .gradStop1 { stop-color: var(--brandA); }
+    .logo .gradStop2 { stop-color: var(--brandB); }
+    .logo .gradStop3 { stop-color: var(--brandC); }
+    @keyframes hue {
+      0%{ filter:hue-rotate(0deg) brightness(1); }
+      50%{ filter:hue-rotate(25deg) brightness(1.15); }
+      100%{ filter:hue-rotate(0deg) brightness(1); }
+    }
+    .logo{ animation: hue 6s ease-in-out infinite; }
+
+    /* Título secundario */
+    p.sub{margin:8px 0 18px; color:var(--muted); font-size:12px; text-align:center}
+
+    /* Formulario */
+    label{display:block; font-size:12px; color:var(--muted); margin:8px 0 6px}
+    input{
+      width:100%; padding:13px 14px; border-radius:12px; border:1px solid #1f2937;
+      background:#0b1220; color:#fff; letter-spacing:2px; text-align:center; font-weight:700; font-size:18px;
+      outline:none; transition:border .2s, box-shadow .2s;
+    }
+    input:focus{ border-color:#4f46e5; box-shadow:0 0 0 3px rgba(99,102,241,.18); }
+    .btn{
+      width:100%; margin-top:14px; padding:12px 14px; border:none; border-radius:12px;
+      background:linear-gradient(135deg, var(--brandA), var(--brandC));
+      color:white; font-weight:800; cursor:pointer; letter-spacing:.3px;
+      box-shadow: 0 14px 34px rgba(124,58,237,.35);
+      transition: transform .05s ease, box-shadow .2s ease;
+    }
+    .btn:hover{ box-shadow: 0 16px 40px rgba(124,58,237,.45); }
+    .btn:active{ transform: translateY(1px); }
+    .btn[disabled]{ opacity:.6; cursor:not-allowed; box-shadow:none; }
+    .msg{ margin-top:10px; font-size:13px; text-align:center; color:#a5b4fc; min-height:18px }
+    .msg.err{ color:var(--err); }
+    .msg.ok{ color:var(--ok); }
+    .small{font-size:11px; color:#64748b; text-align:center; margin-top:10px}
+    code{background:#0b1220; padding:1px 6px; border-radius:6px; border:1px solid #1f2937}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Ingresa tu código</h1>
-    <label for="code">Código (6 dígitos)</label>
-    <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" maxlength="6" />
-    <div class="hint">Solo números — 6 dígitos</div>
-    <button id="btn" disabled>Ingresar</button>
-    <div id="msg" class="msg"></div>
-  </div>
+  <!-- partículas -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <main class="card" role="main" aria-labelledby="heading">
+    <div class="logo-wrap" aria-hidden="true">
+      <!-- SVG LOGO ANIMADO: “GENERADOR” -->
+      <svg class="logo" viewBox="0 0 1200 220" fill="none">
+        <defs>
+          <linearGradient id="grad" x1="0" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
+            <stop class="gradStop1" offset="0%"/>
+            <stop class="gradStop2" offset="50%"/>
+            <stop class="gradStop3" offset="100%"/>
+          </linearGradient>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <clipPath id="clipTxt">
+            <text x="50%" y="64%" text-anchor="middle" font-size="120" font-weight="900" font-family="Inter,system-ui" letter-spacing="4">GENERADOR</text>
+          </clipPath>
+        </defs>
+        <!-- Relleno degradado -->
+        <g filter="url(#glow)">
+          <rect x="0" y="0" width="1200" height="220" fill="url(#grad)" clip-path="url(#clipTxt)"></rect>
+        </g>
+        <!-- Trazo animado -->
+        <text x="50%" y="64%" text-anchor="middle" font-size="120" font-weight="900" font-family="Inter,system-ui" letter-spacing="4"
+              stroke="url(#grad)" stroke-width="2" fill="transparent" opacity=".9">
+          <tspan>GENERADOR</tspan>
+          <animate attributeName="stroke-dasharray" values="0,600; 600,0; 0,600" dur="5s" repeatCount="indefinite" />
+          <animate attributeName="stroke-dashoffset" values="0; -600; 0" dur="5s" repeatCount="indefinite" />
+        </text>
+      </svg>
+    </div>
+
+    <h1 id="heading" class="sr-only" style="position:absolute;left:-9999px;">Acceso — Generador de ID</h1>
+    <p class="sub">Ingresa tu <strong>código de 6 dígitos</strong> para continuar.</p>
+
+    <label for="code">Código</label>
+    <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" maxlength="6" aria-label="Código de ingreso (6 dígitos)"/>
+
+    <button id="btn" class="btn" disabled>Ingresar</button>
+
+    <div id="msg" class="msg" aria-live="polite"></div>
+    <p class="small">
+      Validación contra <code>/auth/users.json</code>. Si falla, confirma que el archivo exista y tenga hashes SHA-256.
+    </p>
+  </main>
 
 <script>
-let VALID_CODES = new Set();
-const $msg  = document.getElementById("msg");
-const $btn  = document.getElementById("btn");
-const $code = document.getElementById("code");
+/* ====== Partículas suaves de fondo ====== */
+(function particles(){
+  const c = document.getElementById('fx');
+  const ctx = c.getContext('2d');
+  let W,H,px=[];
+  function resize(){ W = c.width = innerWidth; H = c.height = innerHeight; }
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function init(n=48){
+    px = Array.from({length:n}, ()=>({
+      x: rand(0,W), y: rand(0,H),
+      r: rand(0.5,2), a: rand(0.2,0.6),
+      vx: rand(-0.15,0.15), vy: rand(-0.15,0.15)
+    }));
+  }
+  function step(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of px){
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(124,58,237,${p.a})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(step);
+  }
+  addEventListener('resize', ()=>{ resize(); init(px.length); });
+  resize(); init(); step();
+})();
 
-// Solo dígitos
-function onlyDigits(s){ return String(s ?? "").replace(/\D+/g,""); }
-// A 6 dígitos exactos con ceros a la izquierda
-function toSixDigits(s){
+/* ====== Login con hashes SHA-256 ====== */
+const $code = document.getElementById('code');
+const $btn  = document.getElementById('btn');
+const $msg  = document.getElementById('msg');
+
+function onlyDigits(s){ return String(s ?? '').replace(/\D+/g,''); }
+function normalizeCode6(s){
   const d = onlyDigits(s);
-  return d.length ? d.padStart(6,"0").slice(0,6) : "";
+  return d.length ? d.padStart(6,'0').slice(0,6) : '';
+}
+function setMsg(text, cls){
+  $msg.textContent = text || '';
+  $msg.className = 'msg' + (cls ? ' ' + cls : '');
+}
+function hardFail(text){
+  setMsg(text, 'err');
+  $btn.disabled = false;
+}
+async function sha256Hex(text){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-async function loadCodes(){
+let HASHES = null;   // arreglo de hashes válidos
+let READY  = false;
+
+async function loadHashes(){
   try{
-    $btn.disabled = true;
-    $msg.textContent = "Cargando códigos…";
-    // ✅ ruta en la raíz del repo
-    const resp = await fetch("./codigos.xlsx", { cache: "no-store" });
-    // Alternativa absoluta (GitHub Pages):
-    // const resp = await fetch("/documento-/codigos.xlsx", { cache: "no-store" });
-    if(!resp.ok) throw new Error(`No se encontró codigos.xlsx en la raíz (HTTP ${resp.status})`);
-    const data = await resp.arrayBuffer();
-    const wb = XLSX.read(data, { type: "array" });
-    const set = new Set();
-
-    wb.SheetNames.forEach(name=>{
-      const ws   = wb.Sheets[name];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-      for(const row of rows){
-        for(const cell of row){
-          const six = toSixDigits(cell);
-          if(six.length === 6) set.add(six);
-        }
-      }
-    });
-
-    VALID_CODES = set;
-    if(VALID_CODES.size === 0){
-      $msg.textContent = "No se encontraron códigos de 6 dígitos en el Excel.";
-      $msg.classList.add("err");
-    }else{
-      $msg.textContent = `Códigos cargados: ${VALID_CODES.size}`;
-      $msg.classList.remove("err");
+    setMsg('Cargando credenciales…');
+    const candidates = [
+      './auth/users.json',
+      '/documento-/auth/users.json'
+    ];
+    let res = null, lastErr = null;
+    for(const url of candidates){
+      try{
+        res = await fetch(url + '?v=' + Date.now(), {cache:'no-store'});
+        if(res.ok) { break; }
+        lastErr = new Error('HTTP '+res.status+' en '+url);
+      }catch(e){ lastErr = e; }
     }
+    if(!res || !res.ok) throw lastErr || new Error('No se pudo obtener users.json');
+
+    const json = await res.json();
+    if (Array.isArray(json.hashes)){
+      HASHES = json.hashes.map(String);
+    } else if (Array.isArray(json.users)){
+      HASHES = json.users.map(u=>String(u.hash)).filter(Boolean);
+    } else {
+      throw new Error('Formato inválido en users.json');
+    }
+    if(!HASHES.length) throw new Error('No hay hashes en users.json');
+    READY = true;
+    setMsg('Listo. Ingresa tu código.');
   }catch(err){
     console.error(err);
-    $msg.textContent = "Error cargando códigos. Revisa que exista /codigos.xlsx en la raíz";
-    $msg.classList.add("err");
-  }finally{
-    $btn.disabled = false;
+    hardFail('No se pudo cargar /auth/users.json. Revisa la ruta y el formato.');
   }
 }
 
-// Restringe el input a 6 dígitos
-$code.addEventListener("input", ()=>{
-  $code.value = onlyDigits($code.value).slice(0,6);
-});
-
-// Enter para enviar
-$code.addEventListener("keydown", (e)=>{
-  if(e.key === "Enter") $btn.click();
-});
-
-$btn.addEventListener("click", ()=>{
-  const code = toSixDigits($code.value);
+async function tryLogin(){
+  if(!READY){ setMsg('Cargando credenciales…', ''); return; }
+  const raw = $code.value;
+  const code = normalizeCode6(raw);
   if(code.length !== 6){
-    $msg.textContent = "El código debe tener 6 dígitos.";
-    $msg.classList.add("err");
+    setMsg('El código debe tener 6 dígitos.', 'err');
     return;
   }
-  if(VALID_CODES.has(code)){
-    window.location.href = "generador.html?code=" + encodeURIComponent(code);
-  }else{
-    $msg.textContent = "Código inválido.";
-    $msg.classList.add("err");
+  $btn.disabled = true;
+  setMsg('Verificando…');
+  try{
+    const hash = await sha256Hex(code);
+    const ok = HASHES.includes(hash);
+    if(!ok){
+      setMsg('Código inválido.', 'err');
+      $btn.disabled = false;
+      return;
+    }
+    sessionStorage.setItem('docgen_auth', '1');
+    sessionStorage.setItem('docgen_code', code);
+    setMsg('Acceso concedido. Redirigiendo…', 'ok');
+    window.location.href = 'generador.html';
+  }catch(err){
+    console.error(err);
+    hardFail('Ocurrió un error al verificar tu código.');
   }
-});
+}
 
-loadCodes();
+/* Eventos */
+$code.addEventListener('input', ()=>{
+  $code.value = onlyDigits($code.value).slice(0,6);
+  $btn.disabled = $code.value.length !== 6;
+});
+$code.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !$btn.disabled){ tryLogin(); } });
+$btn.addEventListener('click', tryLogin);
+
+/* Init */
+loadHashes();
 </script>
 </body>
 </html>
