@@ -133,35 +133,37 @@ const TEMPLATES = [
     id:"card", label:"Card (frente)",
     width:1011, height:638,
     src:"./templates/card.png",
-    fields:{
-      surname:{x:290,y:190,maxW:620,font:"bold 36px Inter, system-ui",color:"#111",align:"left"},
-      given:{x:290,y:238,maxW:620,font:"600 34px Inter, system-ui",color:"#222",align:"left"},
-      code:{x:290,y:286,maxW:620,font:"500 28px Inter, system-ui",color:"#333",align:"left"},
-      category:{x:290,y:334,maxW:620,font:"500 28px Inter, system-ui",color:"#333",align:"left"},
-      country:{x:290,y:382,maxW:620,font:"500 26px Inter, system-ui",color:"#333",align:"left"},
-      dob:{x:290,y:430,maxW:300,font:"500 26px Inter, system-ui",color:"#333",align:"left"},
-      sex:{x:620,y:430,maxW:120,font:"700 26px Inter, system-ui",color:"#111",align:"left"},
-      exp:{x:620,y:520,maxW:300,font:"700 24px Inter, system-ui",color:"#b91c1c",align:"left"},
-      since:{x:290,y:566,maxW:300,font:"500 24px Inter, system-ui",color:"#333",align:"left"}
-    },
-    photo:{x:64,y:170,w:188,h:248,radius:12}
+  fields: {
+  surname:{x:742,y:271,maxW:620,font:"bold 54px Inter, system-ui",color:"#111",align:"left"},
+  given:{x:741,y:428,maxW:620,font:"600 52px Inter, system-ui",color:"#222",align:"left"},
+  code:{x:740,y:576,maxW:620,font:"500 50px Inter, system-ui",color:"#333",align:"left"},
+  category:{x:1180,y:574,maxW:620,font:"500 54px Inter, system-ui",color:"#333",align:"left"},
+  country:{x:740,y:723,maxW:620,font:"500 55px Inter, system-ui",color:"#333",align:"left"},
+  dob:{x:740,y:880,maxW:300,font:"500 51px Inter, system-ui",color:"#333",align:"left"},
+  sex:{x:1193,y:868,maxW:120,font:"700 57px Inter, system-ui",color:"#111",align:"left"},
+  exp:{x:1189,y:956,maxW:300,font:"700 52px Inter, system-ui",color:"#111",align:"left"},   // negro
+  since:{x:1190,y:1026,maxW:300,font:"500 54px Inter, system-ui",color:"#333",align:"left"}
+},
+photo: {x:86,y:398,w:508,h:607,radius:20}
+
   },
   {
     id:"social", label:"Social (frente)",
     width:1011, height:638,
     src:"./templates/social.png",
-    fields:{
-      surname:{x:300,y:200,maxW:620,font:"bold 36px Inter, system-ui",color:"#111",align:"left"},
-      given:{x:300,y:248,maxW:620,font:"600 34px Inter, system-ui",color:"#111",align:"left"},
-      code:{x:300,y:296,maxW:620,font:"500 28px Inter, system-ui",color:"#111",align:"left"},
-      category:{x:300,y:344,maxW:620,font:"500 28px Inter, system-ui",color:"#111",align:"left"},
-      country:{x:300,y:392,maxW:620,font:"500 26px Inter, system-ui",color:"#111",align:"left"},
-      dob:{x:300,y:440,maxW:300,font:"500 26px Inter, system-ui",color:"#111",align:"left"},
-      sex:{x:630,y:440,maxW:120,font:"700 26px Inter, system-ui",color:"#111",align:"left"},
-      exp:{x:630,y:528,maxW:300,font:"700 24px Inter, system-ui",color:"#111",align:"left"},
-      since:{x:300,y:574,maxW:300,font:"500 24px Inter, system-ui",color:"#111",align:"left"}
-    },
-    photo:{x:70,y:180,w:188,h:248,radius:12}
+  fields: {
+  surname:{x:742,y:271,maxW:620,font:"bold 54px Inter, system-ui",color:"#111",align:"left"},
+  given:{x:741,y:428,maxW:620,font:"600 52px Inter, system-ui",color:"#222",align:"left"},
+  code:{x:740,y:576,maxW:620,font:"500 50px Inter, system-ui",color:"#333",align:"left"},
+  category:{x:1180,y:574,maxW:620,font:"500 54px Inter, system-ui",color:"#333",align:"left"},
+  country:{x:740,y:723,maxW:620,font:"500 55px Inter, system-ui",color:"#333",align:"left"},
+  dob:{x:740,y:880,maxW:300,font:"500 51px Inter, system-ui",color:"#333",align:"left"},
+  sex:{x:1193,y:868,maxW:120,font:"700 57px Inter, system-ui",color:"#111",align:"left"},
+  exp:{x:1189,y:956,maxW:300,font:"700 52px Inter, system-ui",color:"#111",align:"left"},   // negro
+  since:{x:1190,y:1026,maxW:300,font:"500 54px Inter, system-ui",color:"#333",align:"left"}
+},
+photo: {x:86,y:398,w:508,h:607,radius:20}
+
   }
 ];
 
@@ -192,7 +194,7 @@ const $appMsg  = document.getElementById('app-msg');
 const $tplStatus = document.getElementById('tpl-status');
 
 /************** DEBUG **************/
-const DEBUG = true; // pon en false al terminar
+const DEBUG = false; // pon en false al terminar
 
 function drawDebugBoxes(){
   if(!DEBUG) return;
