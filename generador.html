@@ -201,6 +201,33 @@ const $jpgQ    = document.getElementById('jpg-quality');
 const $appMsg  = document.getElementById('app-msg');
 
 /*************************
+ * DEBUG (ver cajas para alinear)
+ *************************/
+const DEBUG = true; // pon en false cuando termines de calibrar
+
+function drawDebugBoxes(){
+  if(!DEBUG) return;
+  ctx.save();
+  // Foto en morado
+  if(currentTpl.photo){
+    const p = currentTpl.photo;
+    ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 2;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+  }
+  // Cajas de texto en verde
+  const f = currentTpl.fields;
+  ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2;
+  for(const k of Object.keys(f)){
+    const s = f[k];
+    const fontPx = parseInt((s.font.match(/(\d+)px/)||[])[1]||'24',10);
+    const h = fontPx + 6;                 // alto aprox
+    const w = s.maxW || Math.max(80, ctx.measureText('MMMMMMMM').width);
+    ctx.strokeRect(s.x, s.y, w, h);       // ahora y es borde superior
+  }
+  ctx.restore();
+}
+
+/*************************
  * UTILS
  *************************/
 function setText(el, txt){ el.textContent = txt; }
@@ -243,7 +270,7 @@ function drawText(ctx, spec, text){
   ctx.font = spec.font;
   ctx.fillStyle = spec.color;
   ctx.textAlign = spec.align || 'left';
-  ctx.textBaseline = 'alphabetic';
+  ctx.textBaseline = 'top'; // ← Y es borde superior de la caja
   let t = text;
   if(spec.maxW){
     while(t.length && ctx.measureText(t).width > spec.maxW){ t = t.slice(0, -1); }
@@ -271,10 +298,22 @@ function fillTemplates(){
 }
 function getTemplateById(id){ return TEMPLATES.find(t=>t.id===id) || TEMPLATES[0]; }
 function loadTemplateImage(){
-  return new Promise(res=>{ tplImage = new Image(); tplImage.crossOrigin='anonymous'; tplImage.onload=()=>res(); tplImage.src = currentTpl.src; });
+  return new Promise(res=>{
+    tplImage = new Image();
+    tplImage.crossOrigin='anonymous';
+    tplImage.onload = () => {
+      // Ajusta el canvas al tamaño REAL de la imagen de plantilla
+      currentTpl.width  = tplImage.naturalWidth;
+      currentTpl.height = tplImage.naturalHeight;
+      res();
+    };
+    tplImage.src = currentTpl.src;
+  });
 }
 async function renderPreview(){
-  if($canvas.width!==currentTpl.width || $canvas.height!==currentTpl.height){ $canvas.width=currentTpl.width; $canvas.height=currentTpl.height; }
+  if($canvas.width!==currentTpl.width || $canvas.height!==currentTpl.height){
+    $canvas.width=currentTpl.width; $canvas.height=currentTpl.height;
+  }
   ctx.clearRect(0,0,$canvas.width,$canvas.height);
   ctx.drawImage(tplImage,0,0,$canvas.width,$canvas.height);
   if(photoImage){ const p=currentTpl.photo; drawRoundedImage(ctx, photoImage, p.x,p.y,p.w,p.h,p.radius||0); }
@@ -288,16 +327,32 @@ async function renderPreview(){
   drawText(ctx, f.sex,      ($sex.value||'').toUpperCase());
   drawText(ctx, f.since,    fmtDate($since.value));
   drawText(ctx, f.exp,      fmtDate($exp.value));
+  drawDebugBoxes(); // ← guía visual para alinear
   setText($appMsg, 'Vista previa actualizada');
 }
 
 /*************************
  * EVENTOS
  *************************/
-$tplSelect.addEventListener('change', async ()=>{ currentTpl=getTemplateById($tplSelect.value); await loadTemplateImage(); renderPreview(); });
-$photo.addEventListener('change', (e)=>{ const file=e.target.files[0]; if(!file){ photoImage=null; renderPreview(); return; } const url=URL.createObjectURL(file); const img=new Image(); img.onload=()=>{ photoImage=img; URL.revokeObjectURL(url); renderPreview(); }; img.src=url; });
+$tplSelect.addEventListener('change', async ()=>{
+  currentTpl=getTemplateById($tplSelect.value);
+  await loadTemplateImage();
+  renderPreview();
+});
+$photo.addEventListener('change', (e)=>{
+  const file=e.target.files[0];
+  if(!file){ photoImage=null; renderPreview(); return; }
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{ photoImage=img; URL.revokeObjectURL(url); renderPreview(); };
+  img.src=url;
+});
 $btnPrev.addEventListener('click', ()=> renderPreview());
-$btnExp.addEventListener('click', ()=>{ const name=($outName.value||`ID_${($given.value||'')}_${$category.value||''}.jpg`).replace(/\s+/g,'_'); const q=parseFloat($jpgQ.value||'0.92')||0.92; downloadJPG($canvas,name,q); });
+$btnExp.addEventListener('click', ()=>{
+  const name=($outName.value||`ID_${($given.value||'')}_${$category.value||''}.jpg`).replace(/\s+/g,'_');
+  const q=parseFloat($jpgQ.value||'0.92')||0.92;
+  downloadJPG($canvas,name,q);
+});
 [$surname,$given,$code,$category,$country,$dob,$sex,$since,$exp].forEach(el=>{ el.addEventListener('input', ()=>renderPreview()); });
 
 // Boot
