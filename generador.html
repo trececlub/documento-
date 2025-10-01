@@ -30,6 +30,15 @@
     .sep{height:1px; background:#1f2937; margin:14px 0}
     .link{color:#a5b4fc; text-decoration:none}
     code{background:#0b1220; padding:1px 6px; border-radius:6px; border:1px solid #1f2937}
+
+    /* === Fuente tipo MRZ solo para el reverso === */
+    @font-face{
+      font-family: "OCRB";
+      src:
+        url("https://cdn.jsdelivr.net/gh/justindujardin/ocrb/ocrb-webfont.woff2") format("woff2"),
+        url("https://cdn.jsdelivr.net/gh/justindujardin/ocrb/ocrb-webfont.woff") format("woff");
+      font-display: swap;
+    }
   </style>
 </head>
 <body>
@@ -102,13 +111,13 @@
           <select id="tpl-select"></select>
           <p id="tpl-status" class="hint"></p>
 
-          <!-- === NUEVO: Campos del reverso (opcionales) === -->
+          <!-- === Campos del reverso (opcionales) === -->
           <h2 style="margin-top:18px">Datos del reverso</h2>
           <label>Número superior (entre A y M)</label>
           <input id="b-topnum" type="text" placeholder="99957553" />
           <label>Número después de MSC</label>
           <input id="b-mscnum" type="text" placeholder="0000000110" />
-          <!-- === /NUEVO === -->
+          <!-- === /Campos reverso === -->
 
           <div class="sep"></div>
           <label>Nombre de salida</label>
@@ -177,7 +186,7 @@ const TEMPLATES = [
     photo:{x:86,y:398,w:508,h:607,radius:20}
   },
 
-  /* === NUEVO: plantilla reverso === */
+  /* === Reverso (SOLO aquí usamos la fuente OCRB) === */
   {
     id:"card_back", label:"Card (posterior)",
     width:1218, height:768,                 /* ajusta al tamaño real de tu PNG */
@@ -185,14 +194,13 @@ const TEMPLATES = [
     isBack:true,
     photo:{ x: 50, y: 100, w: 360, h: 260, radius: 16 }, /* calibra con debug */
     fields:{
-      topnum:{ x: 210, y: 32,  maxW: 260, font:"700 36px Inter, system-ui", color:"#111", align:"left" },   // número superior
-      mscnum:{ x: 980, y: 560, maxW: 220, font:"700 36px Inter, system-ui", color:"#111", align:"left" },   // número tras "MSC"
-      mrz1:{   x: 40,  y: 600, maxW: 1120, font:"800 54px Inter, system-ui", color:"#111", align:"left" },  // línea 1
-      mrz2:{   x: 40,  y: 650, maxW: 1120, font:"800 54px Inter, system-ui", color:"#111", align:"left" },  // línea 2
-      mrz3:{   x: 40,  y: 700, maxW: 1120, font:"800 54px Inter, system-ui", color:"#111", align:"left" }   // línea 3 (apellidos/nombre)
+      topnum:{ x:210, y:32,  maxW:260,  font:"700 36px OCRB, 'OCR A Std', 'OCRA', 'Menlo', 'Consolas', monospace", color:"#111", align:"left" },   // número superior
+      mscnum:{ x:980, y:560, maxW:220,  font:"700 36px OCRB, 'OCR A Std', 'OCRA', 'Menlo', 'Consolas', monospace", color:"#111", align:"left" },   // número tras "MSC"
+      mrz1:  { x: 40, y:600, maxW:1120, font:"800 54px OCRB, 'OCR A Std', 'OCRA', 'Menlo', 'Consolas', monospace", color:"#111", align:"left" },  // L1
+      mrz2:  { x: 40, y:650, maxW:1120, font:"800 54px OCRB, 'OCR A Std', 'OCRA', 'Menlo', 'Consolas', monospace", color:"#111", align:"left" },  // L2
+      mrz3:  { x: 40, y:700, maxW:1120, font:"800 54px OCRB, 'OCR A Std', 'OCRA', 'Menlo', 'Consolas', monospace", color:"#111", align:"left" }   // L3
     }
   }
-  /* === /NUEVO === */
 ];
 
 /************** ESTADO + DOM **************/
@@ -221,7 +229,7 @@ const $jpgQ    = document.getElementById('jpg-quality');
 const $appMsg  = document.getElementById('app-msg');
 const $tplStatus = document.getElementById('tpl-status');
 
-/* NUEVO: refs reverso */
+/* refs reverso */
 const $bTop = document.getElementById('b-topnum');
 const $bMSC = document.getElementById('b-mscnum');
 
@@ -274,7 +282,6 @@ function drawRoundedImage(ctx, img, x, y, w, h, r){
   ctx.quadraticCurveTo(x, y, x+rr, y);
   ctx.closePath();
   ctx.clip();
-  // cover
   const ar = img.width / img.height;
   const boxAr = w / h;
   let drawW, drawH;
@@ -342,102 +349,63 @@ function downloadJPG(canvas, filename, quality=0.92){
   const a = document.createElement('a'); a.href = url; a.download = filename || 'documento.jpg';
   document.body.appendChild(a); a.click(); a.remove();
 }
-  
-/************** MRZ utils (REEMPLAZA ESTA SECCIÓN) **************/
+
+/************** MRZ utils **************/
 const MRZ_LINE_LEN = 30;
-
-// L1 base (30 chars) — solo cambia el número tras "MSC" (10 dígitos)
 const MRZ_L1_BASE   = "C1USA1234567897MSC0000000110<<";
-
-// L2 (30 chars) = prefijo (15) + ISO3 país (3) + sufijo (12)
 const MRZ_L2_PREFIX = "0210203F3210260";
 const MRZ_L2_SUFFIX = "<<<<<<<<<<<4";
 
-// Sanitiza a MRZ: mayúsculas, sin acentos, solo A–Z 0–9 y '<' como separador
 function mrzSanitize(s){
   if(!s) return '';
   return s.normalize('NFD')
-          .replace(/[\u0300-\u036f]/g,'') // quita acentos
+          .replace(/[\u0300-\u036f]/g,'')
           .toUpperCase()
-          .replace(/[^A-Z0-9 ]/g,' ')     // deja A-Z 0-9 y espacios
+          .replace(/[^A-Z0-9 ]/g,' ')
           .trim()
-          .replace(/\s+/g,'<');           // espacios -> '<'
+          .replace(/\s+/g,'<');
 }
-
-// ISO3 (aprox. a partir del nombre del país)
 function countryToISO3(name){
   if(!name) return 'XXX';
   const t = mrzSanitize(name).replace(/<+/g,'');
   return (t.slice(0,3) || 'XXX').padEnd(3,'X');
 }
-
-// Ajusta a 30 chars (recorta o rellena con '<')
 function fit30(s){
   let out = (s || '');
   if(out.length > MRZ_LINE_LEN) out = out.slice(0, MRZ_LINE_LEN);
   if(out.length < MRZ_LINE_LEN) out = out + '<'.repeat(MRZ_LINE_LEN - out.length);
   return out;
 }
-
-/**
- * Empaqueta la L3 "AP1<<AP2<<<NOMBRE<" a 30 char SIN cortar el nombre.
- * - Surname puede traer 1+ apellidos (separados por espacios); tomamos los dos primeros como AP1 y AP2.
- * - Si no hay AP2, usamos relleno '<<<<<<<<'.
- * - Si no cabe, reducimos AP2 y luego AP1 (hasta vaciarlos) antes de tocar el nombre.
- */
 function buildLine3FromNames(surnameVal, givenVal){
-  // Normaliza entradas
   const sur = mrzSanitize(surnameVal).replace(/<+/g,'<');
   const giv = mrzSanitize(givenVal).replace(/<+/g,'<');
 
-  // Divide apellidos: primeros dos tokens
   const apTokens = sur.split('<').filter(Boolean);
   let ap1 = apTokens[0] || 'APELLIDO1';
-  let ap2 = apTokens[1] || '<<<<<<<<'; // relleno si falta 2º apellido
-
-  // Nombre completo (puede ser compuesto, NO se corta)
+  let ap2 = apTokens[1] || '<<<<<<<<';
   let name = giv || 'NOMBRE';
 
-  // Presupuesto de contenido: 30 - (2 + 3 + 1) = 24
   const MAX_CONTENT = 24;
   const contentLen = () => ap1.length + ap2.length + name.length;
 
-  // Reducir primero AP2, luego AP1 — NUNCA el nombre
-  // Estrategia: recortar 1 carácter por ciclo desde el final
   while (contentLen() > MAX_CONTENT) {
-    if (ap2.length > 0) {
-      ap2 = ap2.slice(0, -1);
-      continue;
-    }
-    if (ap1.length > 0) {
-      ap1 = ap1.slice(0, -1);
-      continue;
-    }
-    // Si ambos quedaron vacíos y aún no cabe,
-    // ya no hay nada más que reducir sin cortar el nombre.
+    if (ap2.length > 0) { ap2 = ap2.slice(0, -1); continue; }
+    if (ap1.length > 0) { ap1 = ap1.slice(0, -1); continue; }
     break;
   }
-
-  // Ensamble exacto: AP1<<AP2<<<NOMBRE<
-  let core = `${ap1}<<${ap2}<<<${name}<`;
+  const core = `${ap1}<<${ap2}<<<${name}<`;
   return fit30(core);
 }
-
-// >>> FUNCIÓN QUE USA EL RENDER DEL REVERSO <<<
 function buildBackLines(){
-  // === LÍNEA 1: fijo + MSC + 10 dígitos editables ===
   const mscIn = ($bMSC?.value || '').replace(/\D+/g,'').slice(0,10).padStart(10,'0');
   let L1 = MRZ_L1_BASE.replace(/MSC\d{10}/, "MSC" + mscIn);
   L1 = fit30(L1);
 
-  // === LÍNEA 2: prefijo + ISO3 país + sufijo ===
   const iso3 = countryToISO3($country.value).slice(0,3);
   let L2 = MRZ_L2_PREFIX + iso3 + MRZ_L2_SUFFIX; // 15 + 3 + 12 = 30
   L2 = fit30(L2);
 
-  // === LÍNEA 3: APELLIDO1<<APELLIDO2<<<NOMBRE< (sin cortar nombre) ===
   let L3 = buildLine3FromNames($surname.value, $given.value);
-
   return { L1, L2, L3 };
 }
 
@@ -528,9 +496,9 @@ async function renderPreview(){
 
   /* === RENDER REVERSO === */
   if (currentTpl.isBack === true) {
-    const { top, msc, L1, L2, L3 } = buildBackLines();
-    drawText(ctx, f.topnum, top);
-    drawText(ctx, f.mscnum, msc);
+    const { L1, L2, L3 } = buildBackLines();
+    drawText(ctx, f.topnum, ($bTop?.value||'').toUpperCase());
+    drawText(ctx, f.mscnum, ($bMSC?.value||'').toUpperCase());
     drawText(ctx, f.mrz1,   L1);
     drawText(ctx, f.mrz2,   L2);
     drawText(ctx, f.mrz3,   L3);
