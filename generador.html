@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -131,6 +131,7 @@
 if (sessionStorage.getItem('docgen_auth') !== '1') {
   window.location.replace('index.html');
 }
+
 /************** UTIL: query **************/
 function getQueryParam(name){
   return new URLSearchParams(window.location.search).get(name);
@@ -179,10 +180,10 @@ const TEMPLATES = [
   /* === NUEVO: plantilla reverso === */
   {
     id:"card_back", label:"Card (posterior)",
-    width:1218, height:768,                 /* usa el tamaño real de tu imagen */
+    width:1218, height:768,                 /* ajusta al tamaño real de tu PNG */
     src:"./templates/card_back.png",
     isBack:true,
-    photo:{ x: 50, y: 100, w: 360, h: 260, radius: 16 }, /* EJEMPLO → calibra con debug */
+    photo:{ x: 50, y: 100, w: 360, h: 260, radius: 16 }, /* calibra con debug */
     fields:{
       topnum:{ x: 210, y: 32,  maxW: 260, font:"700 36px Inter, system-ui", color:"#111", align:"left" },   // número superior
       mscnum:{ x: 980, y: 560, maxW: 220, font:"700 36px Inter, system-ui", color:"#111", align:"left" },   // número tras "MSC"
@@ -225,7 +226,7 @@ const $bTop = document.getElementById('b-topnum');
 const $bMSC = document.getElementById('b-mscnum');
 
 /************** DEBUG **************/
-const DEBUG = true; // pon en false al terminar
+const DEBUG = false; // pon en true para calibrar
 
 function drawDebugBoxes(){
   if(!DEBUG) return;
@@ -360,7 +361,7 @@ function countryToISO3(name){
 function buildBackLines(){
   const surname1 = mrzSanitize($surname.value);
   const given    = mrzSanitize($given.value);
-  const ap2      = '<<<<<<<<';                // relleno si no hay segundo apellido
+  const ap2      = '<<<<<<<<';                // si no hay segundo apellido
   const c3       = countryToISO3($country.value);
   const top      = ($bTop?.value||'').replace(/\s+/g,'').toUpperCase();
   const msc      = ($bMSC?.value||'').replace(/\s+/g,'').toUpperCase();
@@ -444,7 +445,7 @@ async function renderPreview(){
   ctx.clearRect(0,0,$canvas.width,$canvas.height);
   if(tplImage?.naturalWidth) ctx.drawImage(tplImage,0,0,$canvas.width,$canvas.height);
 
-  // FOTO B/N (solo si hay caja de foto en el template actual)
+  // FOTO B/N (si hay caja foto)
   if (photoImage && currentTpl.photo) {
     const p = currentTpl.photo;
     if (typeof ctx.filter === 'string') {
@@ -458,7 +459,7 @@ async function renderPreview(){
 
   const f = currentTpl.fields || {};
 
-  /* === NUEVO: ruta de render para reverso === */
+  /* === RENDER REVERSO === */
   if (currentTpl.isBack === true) {
     const { top, msc, L1, L2, L3 } = buildBackLines();
     drawText(ctx, f.topnum, top);
@@ -468,11 +469,10 @@ async function renderPreview(){
     drawText(ctx, f.mrz3,   L3);
     drawDebugBoxes();
     setText($appMsg, 'Vista previa (reverso) actualizada');
-    return; // ← no sigas con el render del frente
+    return; // no seguir con el frontal
   }
-  /* === /NUEVO === */
 
-  // Render del frente (SIN CAMBIOS)
+  /* === RENDER FRENTE === */
   drawText(ctx, f.surname,  ($surname.value||'').toUpperCase());
   drawText(ctx, f.given,    ($given.value||'').toUpperCase());
   drawText(ctx, f.code,     $code.value||'');
@@ -513,10 +513,9 @@ $btnExp.addEventListener('click', ()=>{
   downloadJPG($canvas,name,q);
 });
 [$surname,$given,$code,$category,$country,$dob,$sex,$since,$exp].forEach(el=> el.addEventListener('input', ()=>renderPreview()) );
-/* NUEVO: refrescar cuando cambien campos de reverso */
-[$bTop,$bMSC].forEach(el=> el && el.addEventListener('input', ()=>renderPreview()));
+[$bTop,$bMSC].forEach(el=> el && el.addEventListener('input', ()=>renderPreview()) );
 
- /************** INIT **************/
+/************** INIT **************/
 (async function init(){
   fillCountries();
   fillTemplates();
@@ -526,7 +525,6 @@ $btnExp.addEventListener('click', ()=>{
   }catch(e){
     // sigue con lienzo en blanco para permitir cambiar plantilla
   }
-  // Precargar CODE desde ?code=
   const codeParam = getQueryParam('code');
   if(codeParam){ document.getElementById('f-code').value = codeParam; document.getElementById('f-code').readOnly = true; }
   renderPreview();
