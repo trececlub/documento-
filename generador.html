@@ -343,35 +343,66 @@ function downloadJPG(canvas, filename, quality=0.92){
   document.body.appendChild(a); a.click(); a.remove();
 }
 
-/************** MRZ utils (NUEVO) **************/
+/************** MRZ utils (REEMPLAZA ESTA SECCIÓN) **************/
+const MRZ_LINE_LEN = 30;
+
+// Línea 1 base (30 chars) — solo cambia el número tras "MSC" (10 dígitos)
+const MRZ_L1_BASE   = "C1USA1234567897MSC0000000110<<";
+
+// Línea 2 base (30 chars) = prefijo (15) + ISO3 país (3) + sufijo (12)
+const MRZ_L2_PREFIX = "0210203F3210260";
+const MRZ_L2_SUFFIX = "<<<<<<<<<<<4";
+
+// Sanitiza a MRZ: mayúsculas, sin acentos, solo A–Z 0–9 y '<' como espacio
 function mrzSanitize(s){
   if(!s) return '';
   return s.normalize('NFD')
-          .replace(/[\u0300-\u036f]/g,'')
+          .replace(/[\u0300-\u036f]/g,'') // sin acentos
           .toUpperCase()
-          .replace(/[^A-Z0-9 ]/g,' ')
+          .replace(/[^A-Z0-9 ]/g,' ')     // solo A-Z, 0-9 y espacios
           .trim()
-          .replace(/\s+/g,'<');
+          .replace(/\s+/g,'<');           // espacios → '<'
 }
+
+// Convierte país a “código de 3 letras” (a falta de tabla ISO real)
 function countryToISO3(name){
   if(!name) return 'XXX';
   const t = mrzSanitize(name).replace(/<+/g,'');
   return (t.slice(0,3) || 'XXX').padEnd(3,'X');
 }
+
+// Utilidad: recorta/pad a 30 con '<'
+function fit30(s){
+  let out = (s || '').slice(0, MRZ_LINE_LEN);
+  if(out.length < MRZ_LINE_LEN) out = out + '<'.repeat(MRZ_LINE_LEN - out.length);
+  return out;
+}
+
+// >>> ESTA FUNCIÓN ES LA QUE USA EL RENDER DEL REVERSO <<<
 function buildBackLines(){
-  const surname1 = mrzSanitize($surname.value);
-  const given    = mrzSanitize($given.value);
-  const ap2      = '<<<<<<<<';                // si no hay segundo apellido
-  const c3       = countryToISO3($country.value);
-  const top      = ($bTop?.value||'').replace(/\s+/g,'').toUpperCase();
-  const msc      = ($bMSC?.value||'').replace(/\s+/g,'').toUpperCase();
+  // 1) LÍNEA 1 (fija con hueco MSC[10dígitos])
+  const mscIn = ($bMSC?.value || '').replace(/\D+/g,'').slice(0,10).padStart(10,'0');
+  // sustituye el bloque MSCxxxxxxxxxx conservando el resto tal cual
+  let L1 = MRZ_L1_BASE.replace(/MSC\d{10}/, "MSC" + mscIn);
+  L1 = fit30(L1); // por seguridad, mantiene 30
 
-  // Ajusta estos prefijos/formatos a tu necesidad real:
-  const L1 = `C1USA1234567897MSC${msc}`;
-  const L2 = `0210203F3210260${c3}`;
-  const L3 = `${surname1}<<${ap2}<<${given}`;
+  // 2) LÍNEA 2 (prefijo + ISO3 país + sufijo)
+  const iso3 = countryToISO3($country.value).slice(0,3);
+  let L2 = MRZ_L2_PREFIX + iso3 + MRZ_L2_SUFFIX; // = 15 + 3 + 12 = 30
+  L2 = fit30(L2);
 
-  return { top, msc, L1, L2, L3 };
+  // 3) LÍNEA 3 (AP1 << AP2 < NOMBRE + relleno '<' hasta 30)
+  const ap1   = mrzSanitize($surname.value).replace(/<+/g,''); // 1er apellido
+  const ap2In = ""; // no tenemos 2º apellido en el formulario; si existiera, colócalo aquí
+  const ap2   = ap2In ? mrzSanitize(ap2In).replace(/<+/g,'') : '<<<<<<<<'; // relleno si falta
+  const given = mrzSanitize($given.value).replace(/<+/g,'');
+  const givenInitial = given.slice(0,1) || 'V'; // en tu ejemplo es una inicial
+
+  // Ensamblado exacto como tu ejemplo: "AP1<<AP2<N<<<<<<<<<<<<<<"
+  let L3core = `${ap1}<<${ap2}<${givenInitial}`;
+  let L3 = fit30(L3core); // rellena con '<' hasta 30, o recorta si excede
+
+  return { L1, L2, L3 };
 }
 
 /************** SELECT + LOADERS **************/
