@@ -102,6 +102,14 @@
           <select id="tpl-select"></select>
           <p id="tpl-status" class="hint"></p>
 
+          <!-- === NUEVO: Campos del reverso (opcionales) === -->
+          <h2 style="margin-top:18px">Datos del reverso</h2>
+          <label>Número superior (entre A y M)</label>
+          <input id="b-topnum" type="text" placeholder="99957553" />
+          <label>Número después de MSC</label>
+          <input id="b-mscnum" type="text" placeholder="0000000110" />
+          <!-- === /NUEVO === -->
+
           <div class="sep"></div>
           <label>Nombre de salida</label>
           <input id="out-name" type="text" placeholder="ID_Nombre_Tipo.jpg"/>
@@ -137,38 +145,53 @@ const TEMPLATES = [
     id:"card", label:"Card (frente)",
     width:1011, height:638,
     src:"./templates/card.png",
-  fields: {
-  surname:{x:742,y:271,maxW:620,font:"bold 54px Inter, system-ui",color:"#111",align:"left"},
-  given:{x:741,y:428,maxW:620,font:"600 52px Inter, system-ui",color:"#222",align:"left"},
-  code:{x:740,y:576,maxW:620,font:"500 50px Inter, system-ui",color:"#333",align:"left"},
-  category:{x:1180,y:574,maxW:620,font:"500 54px Inter, system-ui",color:"#333",align:"left"},
-  country:{x:740,y:723,maxW:620,font:"500 55px Inter, system-ui",color:"#333",align:"left"},
-  dob:{x:740,y:880,maxW:300,font:"500 51px Inter, system-ui",color:"#333",align:"left"},
-  sex:{x:1193,y:868,maxW:120,font:"700 57px Inter, system-ui",color:"#111",align:"left"},
-  exp:{x:1189,y:956,maxW:300,font:"700 52px Inter, system-ui",color:"#111",align:"left"},   // negro
-  since:{x:1190,y:1026,maxW:300,font:"500 54px Inter, system-ui",color:"#333",align:"left"}
-},
-photo: {x:86,y:398,w:508,h:607,radius:20}
-
+    fields:{
+      surname:{x:742,y:271,maxW:620,font:"bold 54px Inter, system-ui",color:"#111",align:"left"},
+      given:{x:741,y:428,maxW:620,font:"600 52px Inter, system-ui",color:"#222",align:"left"},
+      code:{x:740,y:576,maxW:620,font:"500 50px Inter, system-ui",color:"#333",align:"left"},
+      category:{x:1180,y:574,maxW:620,font:"500 54px Inter, system-ui",color:"#333",align:"left"},
+      country:{x:740,y:723,maxW:620,font:"500 55px Inter, system-ui",color:"#333",align:"left"},
+      dob:{x:740,y:880,maxW:300,font:"500 51px Inter, system-ui",color:"#333",align:"left"},
+      sex:{x:1193,y:868,maxW:120,font:"700 57px Inter, system-ui",color:"#111",align:"left"},
+      exp:{x:1189,y:956,maxW:300,font:"700 52px Inter, system-ui",color:"#111",align:"left"},
+      since:{x:1190,y:1026,maxW:300,font:"500 54px Inter, system-ui",color:"#333",align:"left"}
+    },
+    photo:{x:86,y:398,w:508,h:607,radius:20}
   },
   {
     id:"social", label:"Social (frente)",
     width:1011, height:638,
     src:"./templates/social.png",
-  fields: {
-  surname:{x:742,y:271,maxW:620,font:"bold 54px Inter, system-ui",color:"#111",align:"left"},
-  given:{x:741,y:428,maxW:620,font:"600 52px Inter, system-ui",color:"#222",align:"left"},
-  code:{x:740,y:576,maxW:620,font:"500 50px Inter, system-ui",color:"#333",align:"left"},
-  category:{x:1180,y:574,maxW:620,font:"500 54px Inter, system-ui",color:"#333",align:"left"},
-  country:{x:740,y:723,maxW:620,font:"500 55px Inter, system-ui",color:"#333",align:"left"},
-  dob:{x:740,y:880,maxW:300,font:"500 51px Inter, system-ui",color:"#333",align:"left"},
-  sex:{x:1193,y:868,maxW:120,font:"700 57px Inter, system-ui",color:"#111",align:"left"},
-  exp:{x:1189,y:956,maxW:300,font:"700 52px Inter, system-ui",color:"#111",align:"left"},   // negro
-  since:{x:1190,y:1026,maxW:300,font:"500 54px Inter, system-ui",color:"#333",align:"left"}
-},
-photo: {x:86,y:398,w:508,h:607,radius:20}
+    fields:{
+      surname:{x:742,y:271,maxW:620,font:"bold 54px Inter, system-ui",color:"#111",align:"left"},
+      given:{x:741,y:428,maxW:620,font:"600 52px Inter, system-ui",color:"#222",align:"left"},
+      code:{x:740,y:576,maxW:620,font:"500 50px Inter, system-ui",color:"#333",align:"left"},
+      category:{x:1180,y:574,maxW:620,font:"500 54px Inter, system-ui",color:"#333",align:"left"},
+      country:{x:740,y:723,maxW:620,font:"500 55px Inter, system-ui",color:"#333",align:"left"},
+      dob:{x:740,y:880,maxW:300,font:"500 51px Inter, system-ui",color:"#333",align:"left"},
+      sex:{x:1193,y:868,maxW:120,font:"700 57px Inter, system-ui",color:"#111",align:"left"},
+      exp:{x:1189,y:956,maxW:300,font:"700 52px Inter, system-ui",color:"#111",align:"left"},
+      since:{x:1190,y:1026,maxW:300,font:"500 54px Inter, system-ui",color:"#333",align:"left"}
+    },
+    photo:{x:86,y:398,w:508,h:607,radius:20}
+  },
 
+  /* === NUEVO: plantilla reverso === */
+  {
+    id:"card_back", label:"Card (posterior)",
+    width:1218, height:768,                 /* usa el tamaño real de tu imagen */
+    src:"./templates/card_back.png",
+    isBack:true,
+    photo:{ x: 50, y: 100, w: 360, h: 260, radius: 16 }, /* EJEMPLO → calibra con debug */
+    fields:{
+      topnum:{ x: 210, y: 32,  maxW: 260, font:"700 36px Inter, system-ui", color:"#111", align:"left" },   // número superior
+      mscnum:{ x: 980, y: 560, maxW: 220, font:"700 36px Inter, system-ui", color:"#111", align:"left" },   // número tras "MSC"
+      mrz1:{   x: 40,  y: 600, maxW: 1120, font:"800 54px Inter, system-ui", color:"#111", align:"left" },  // línea 1
+      mrz2:{   x: 40,  y: 650, maxW: 1120, font:"800 54px Inter, system-ui", color:"#111", align:"left" },  // línea 2
+      mrz3:{   x: 40,  y: 700, maxW: 1120, font:"800 54px Inter, system-ui", color:"#111", align:"left" }   // línea 3 (apellidos/nombre)
+    }
   }
+  /* === /NUEVO === */
 ];
 
 /************** ESTADO + DOM **************/
@@ -197,6 +220,10 @@ const $jpgQ    = document.getElementById('jpg-quality');
 const $appMsg  = document.getElementById('app-msg');
 const $tplStatus = document.getElementById('tpl-status');
 
+/* NUEVO: refs reverso */
+const $bTop = document.getElementById('b-topnum');
+const $bMSC = document.getElementById('b-mscnum');
+
 /************** DEBUG **************/
 const DEBUG = true; // pon en false al terminar
 
@@ -208,11 +235,11 @@ function drawDebugBoxes(){
     ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 2;
     ctx.strokeRect(p.x, p.y, p.w, p.h);
   }
-  const f = currentTpl.fields;
+  const f = currentTpl.fields || {};
   ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2;
   for(const k of Object.keys(f)){
     const s = f[k];
-    const fontPx = parseInt((s.font.match(/(\d+)px/)||[])[1]||'24',10);
+    const fontPx = parseInt((s.font?.match(/(\d+)px/)||[])[1]||'24',10);
     const h = fontPx + 6;
     const w = s.maxW || Math.max(80, ctx.measureText('MMMMMMMM').width);
     ctx.strokeRect(s.x, s.y, w, h);
@@ -257,33 +284,25 @@ function drawRoundedImage(ctx, img, x, y, w, h, r){
   ctx.restore();
 }
 
-/* === NUEVO: Dibujo en Blanco y Negro (fallback robusto) === */
+/* === Blanco y Negro (fallback robusto) === */
 function drawRoundedImageBW(ctx, img, x, y, w, h, r=0){
-  // calcular tamaño cover igual que drawRoundedImage
   const ar = img.width / img.height;
   const boxAr = w / h;
   let drawW, drawH;
   if (ar > boxAr) { drawH = h; drawW = h * ar; }
   else            { drawW = w; drawH = w / ar; }
-
-  // pintar en un canvas offscreen
   const off = document.createElement('canvas');
   off.width  = Math.ceil(drawW);
   off.height = Math.ceil(drawH);
   const octx = off.getContext('2d');
   octx.drawImage(img, 0, 0, off.width, off.height);
-
-  // convertir a escala de grises (luminosidad perceptual)
   const imgData = octx.getImageData(0, 0, off.width, off.height);
   const data = imgData.data;
   for (let i = 0; i < data.length; i += 4) {
-    const rCh = data[i], gCh = data[i+1], bCh = data[i+2];
-    const yv = 0.2126*rCh + 0.7152*gCh + 0.0722*bCh;
+    const yv = 0.2126*data[i] + 0.7152*data[i+1] + 0.0722*data[i+2];
     data[i] = data[i+1] = data[i+2] = yv;
   }
   octx.putImageData(imgData, 0, 0);
-
-  // recorte redondeado y dibujar centrado en la caja
   ctx.save();
   const rr = Math.min(r, w/2, h/2);
   ctx.beginPath();
@@ -298,7 +317,6 @@ function drawRoundedImageBW(ctx, img, x, y, w, h, r=0){
   ctx.quadraticCurveTo(x, y, x+rr, y);
   ctx.closePath();
   ctx.clip();
-
   const dx = x + (w - off.width) / 2;
   const dy = y + (h - off.height) / 2;
   ctx.drawImage(off, dx, dy);
@@ -310,7 +328,7 @@ function drawText(ctx, spec, text){
   ctx.font = spec.font;
   ctx.fillStyle = spec.color;
   ctx.textAlign = spec.align || 'left';
-  ctx.textBaseline = 'top'; // y = borde superior
+  ctx.textBaseline = 'top';
   let t = text;
   if(spec.maxW){
     while(t.length && ctx.measureText(t).width > spec.maxW){ t = t.slice(0, -1); }
@@ -322,6 +340,37 @@ function downloadJPG(canvas, filename, quality=0.92){
   const url = canvas.toDataURL('image/jpeg', Math.min(Math.max(quality,0.5),1));
   const a = document.createElement('a'); a.href = url; a.download = filename || 'documento.jpg';
   document.body.appendChild(a); a.click(); a.remove();
+}
+
+/************** MRZ utils (NUEVO) **************/
+function mrzSanitize(s){
+  if(!s) return '';
+  return s.normalize('NFD')
+          .replace(/[\u0300-\u036f]/g,'')
+          .toUpperCase()
+          .replace(/[^A-Z0-9 ]/g,' ')
+          .trim()
+          .replace(/\s+/g,'<');
+}
+function countryToISO3(name){
+  if(!name) return 'XXX';
+  const t = mrzSanitize(name).replace(/<+/g,'');
+  return (t.slice(0,3) || 'XXX').padEnd(3,'X');
+}
+function buildBackLines(){
+  const surname1 = mrzSanitize($surname.value);
+  const given    = mrzSanitize($given.value);
+  const ap2      = '<<<<<<<<';                // relleno si no hay segundo apellido
+  const c3       = countryToISO3($country.value);
+  const top      = ($bTop?.value||'').replace(/\s+/g,'').toUpperCase();
+  const msc      = ($bMSC?.value||'').replace(/\s+/g,'').toUpperCase();
+
+  // Ajusta estos prefijos/formatos a tu necesidad real:
+  const L1 = `C1USA1234567897MSC${msc}`;
+  const L2 = `0210203F3210260${c3}`;
+  const L3 = `${surname1}<<${ap2}<<${given}`;
+
+  return { top, msc, L1, L2, L3 };
 }
 
 /************** SELECT + LOADERS **************/
@@ -358,16 +407,16 @@ function tryLoadImage(url){
     const img = new Image();
     img.onload = ()=> resolve(img);
     img.onerror = ()=> reject(new Error("No se pudo cargar: " + url));
-    img.src = url + (url.includes("?") ? "&" : "?") + "v=" + Date.now(); // anti-caché
+    img.src = url + (url.includes("?") ? "&" : "?") + "v=" + Date.now();
   });
 }
 async function loadTemplateImage(){
   const src = currentTpl.src;
   const fname = src.split("/").pop();
   const candidates = [
-    src,                                  // como está en TEMPLATES
-    `/documento-/templates/${fname}`,     // absoluta para GitHub Pages
-    `./templates/${fname}`                // relativa
+    src,
+    `/documento-/templates/${fname}`,
+    `./templates/${fname}`
   ];
   let lastErr = null;
   for (const url of candidates){
@@ -383,7 +432,7 @@ async function loadTemplateImage(){
       console.warn(e.message);
     }
   }
-  if($tplStatus) $tplStatus.textContent = `❌ No se pudo cargar "${fname}". Revisa nombre/extensión en /templates/. Último error: ${lastErr?.message||''}`;
+  if($tplStatus) $tplStatus.textContent = `❌ No se pudo cargar "${fname}". Revisa /templates/. Último error: ${lastErr?.message||''}`;
   throw lastErr || new Error("Fallo al cargar plantilla");
 }
 
@@ -395,24 +444,35 @@ async function renderPreview(){
   ctx.clearRect(0,0,$canvas.width,$canvas.height);
   if(tplImage?.naturalWidth) ctx.drawImage(tplImage,0,0,$canvas.width,$canvas.height);
 
-  /* >>> ÚNICO CAMBIO EN EL BLOQUE DE FOTO <<< */
-  if (photoImage) {
+  // FOTO B/N (solo si hay caja de foto en el template actual)
+  if (photoImage && currentTpl.photo) {
     const p = currentTpl.photo;
     if (typeof ctx.filter === 'string') {
-      // Intento con filtros nativos
-      ctx.save();
-      ctx.filter = 'grayscale(100%)';
+      ctx.save(); ctx.filter = 'grayscale(100%)';
       drawRoundedImage(ctx, photoImage, p.x, p.y, p.w, p.h, p.radius || 0);
-      ctx.filter = 'none';
-      ctx.restore();
+      ctx.filter = 'none'; ctx.restore();
     } else {
-      // Fallback robusto pixel-a-pixel
       drawRoundedImageBW(ctx, photoImage, p.x, p.y, p.w, p.h, p.radius || 0);
     }
   }
-  /* <<< FIN DEL CAMBIO >>> */
 
-  const f=currentTpl.fields;
+  const f = currentTpl.fields || {};
+
+  /* === NUEVO: ruta de render para reverso === */
+  if (currentTpl.isBack === true) {
+    const { top, msc, L1, L2, L3 } = buildBackLines();
+    drawText(ctx, f.topnum, top);
+    drawText(ctx, f.mscnum, msc);
+    drawText(ctx, f.mrz1,   L1);
+    drawText(ctx, f.mrz2,   L2);
+    drawText(ctx, f.mrz3,   L3);
+    drawDebugBoxes();
+    setText($appMsg, 'Vista previa (reverso) actualizada');
+    return; // ← no sigas con el render del frente
+  }
+  /* === /NUEVO === */
+
+  // Render del frente (SIN CAMBIOS)
   drawText(ctx, f.surname,  ($surname.value||'').toUpperCase());
   drawText(ctx, f.given,    ($given.value||'').toUpperCase());
   drawText(ctx, f.code,     $code.value||'');
@@ -420,8 +480,8 @@ async function renderPreview(){
   drawText(ctx, f.country,  $country.value||'');
   drawText(ctx, f.dob,      fmtDate($dob.value));
   drawText(ctx, f.sex,      ($sex.value||'').toUpperCase());
-  drawText(ctx, f.exp,      fmtDate($exp.value));   // exp arriba
-  drawText(ctx, f.since,    fmtDate($since.value)); // since debajo
+  drawText(ctx, f.exp,      fmtDate($exp.value));
+  drawText(ctx, f.since,    fmtDate($since.value));
   drawDebugBoxes();
   setText($appMsg, 'Vista previa actualizada');
 }
@@ -453,8 +513,10 @@ $btnExp.addEventListener('click', ()=>{
   downloadJPG($canvas,name,q);
 });
 [$surname,$given,$code,$category,$country,$dob,$sex,$since,$exp].forEach(el=> el.addEventListener('input', ()=>renderPreview()) );
+/* NUEVO: refrescar cuando cambien campos de reverso */
+[$bTop,$bMSC].forEach(el=> el && el.addEventListener('input', ()=>renderPreview()));
 
-/************** INIT **************/
+ /************** INIT **************/
 (async function init(){
   fillCountries();
   fillTemplates();
@@ -472,7 +534,7 @@ $btnExp.addEventListener('click', ()=>{
 
 /************** MODO CALIBRACIÓN CON TECLAS **************/
 let _tuneIndex = 0;
-function _fieldKeys(){ return Object.keys(currentTpl.fields); }
+function _fieldKeys(){ return Object.keys(currentTpl.fields||{}); }
 function tune(fieldName){
   const keys = _fieldKeys();
   if (!keys.length) return alert("No hay fields en la plantilla.");
@@ -484,7 +546,7 @@ function tune(fieldName){
   const spec = currentTpl.fields[k];
   console.log(`🎯 Tunear: ${k}`, spec);
   renderPreview();
-  const fontPx = parseInt((spec.font.match(/(\d+)px/)||[])[1]||'24',10);
+  const fontPx = parseInt((spec.font?.match(/(\d+)px/)||[])[1]||'24',10);
   ctx.save();
   ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
   const h = fontPx + 6;
