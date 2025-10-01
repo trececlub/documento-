@@ -507,8 +507,6 @@ async function renderPreview(){
   /* === RENDER REVERSO === */
   if (currentTpl.isBack === true) {
     const { L1, L2, L3 } = buildBackLines();
-    drawText(ctx, f.topnum, ($bTop?.value||'').toUpperCase());
-    drawText(ctx, f.mscnum, ($bMSC?.value||'').toUpperCase());
     drawText(ctx, f.mrz1,   L1);
     drawText(ctx, f.mrz2,   L2);
     drawText(ctx, f.mrz3,   L3);
