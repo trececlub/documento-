@@ -364,10 +364,10 @@ function mrzSanitize(s){
           .replace(/\s+/g,'<');           // espacios -> '<'
 }
 
-// Convierte país a “código” de 3 letras (si no usamos tabla ISO real)
+// ISO3 (aprox. a partir del nombre del país)
 function countryToISO3(name){
   if(!name) return 'XXX';
-  const t = mrzSanitize(name).replace(/<+/g,''); // sin separadores
+  const t = mrzSanitize(name).replace(/<+/g,'');
   return (t.slice(0,3) || 'XXX').padEnd(3,'X');
 }
 
@@ -379,41 +379,67 @@ function fit30(s){
   return out;
 }
 
+/**
+ * Empaqueta la L3 "AP1<<AP2<<<NOMBRE<" a 30 char SIN cortar el nombre.
+ * - Surname puede traer 1+ apellidos (separados por espacios); tomamos los dos primeros como AP1 y AP2.
+ * - Si no hay AP2, usamos relleno '<<<<<<<<'.
+ * - Si no cabe, reducimos AP2 y luego AP1 (hasta vaciarlos) antes de tocar el nombre.
+ */
+function buildLine3FromNames(surnameVal, givenVal){
+  // Normaliza entradas
+  const sur = mrzSanitize(surnameVal).replace(/<+/g,'<');
+  const giv = mrzSanitize(givenVal).replace(/<+/g,'<');
+
+  // Divide apellidos: primeros dos tokens
+  const apTokens = sur.split('<').filter(Boolean);
+  let ap1 = apTokens[0] || 'APELLIDO1';
+  let ap2 = apTokens[1] || '<<<<<<<<'; // relleno si falta 2º apellido
+
+  // Nombre completo (puede ser compuesto, NO se corta)
+  let name = giv || 'NOMBRE';
+
+  // Presupuesto de contenido: 30 - (2 + 3 + 1) = 24
+  const MAX_CONTENT = 24;
+  const contentLen = () => ap1.length + ap2.length + name.length;
+
+  // Reducir primero AP2, luego AP1 — NUNCA el nombre
+  // Estrategia: recortar 1 carácter por ciclo desde el final
+  while (contentLen() > MAX_CONTENT) {
+    if (ap2.length > 0) {
+      ap2 = ap2.slice(0, -1);
+      continue;
+    }
+    if (ap1.length > 0) {
+      ap1 = ap1.slice(0, -1);
+      continue;
+    }
+    // Si ambos quedaron vacíos y aún no cabe,
+    // ya no hay nada más que reducir sin cortar el nombre.
+    break;
+  }
+
+  // Ensamble exacto: AP1<<AP2<<<NOMBRE<
+  let core = `${ap1}<<${ap2}<<<${name}<`;
+  return fit30(core);
+}
+
 // >>> FUNCIÓN QUE USA EL RENDER DEL REVERSO <<<
 function buildBackLines(){
   // === LÍNEA 1: fijo + MSC + 10 dígitos editables ===
   const mscIn = ($bMSC?.value || '').replace(/\D+/g,'').slice(0,10).padStart(10,'0');
   let L1 = MRZ_L1_BASE.replace(/MSC\d{10}/, "MSC" + mscIn);
-  L1 = fit30(L1); // seguridad
+  L1 = fit30(L1);
 
   // === LÍNEA 2: prefijo + ISO3 país + sufijo ===
   const iso3 = countryToISO3($country.value).slice(0,3);
   let L2 = MRZ_L2_PREFIX + iso3 + MRZ_L2_SUFFIX; // 15 + 3 + 12 = 30
   L2 = fit30(L2);
 
-  // === LÍNEA 3: APELLIDO1<<APELLIDO2<<<NOMBRE< ===
-  // Apellido 1 (obligatorio)
-  const ap1 = mrzSanitize($surname.value).replace(/<+/g,''); // sin '<' internos
-
-  // Apellido 2: si no hay, usar relleno '<<<<<<<<'
-  // (Si luego agregas un campo para Apellido2, léelo aquí)
-  const ap2Raw = ""; // ← aquí iría el valor si lo tienes en un input
-  const ap2 = ap2Raw
-    ? mrzSanitize(ap2Raw).replace(/<+/g,'')
-    : '<<<<<<<<';
-
-  // Nombre completo (puede tener varias palabras → separamos con '<')
-  let name = mrzSanitize($given.value);
-  name = name.replace(/<+/g,'<'); // compacta separadores
-  if (!name) name = 'NOMBRE';     // fallback si está vacío
-
-  // Ensamblado exacto con separadores exigidos: << y <<<
-  let L3core = `${ap1}<<${ap2}<<<${name}<`;
-  let L3 = fit30(L3core);
+  // === LÍNEA 3: APELLIDO1<<APELLIDO2<<<NOMBRE< (sin cortar nombre) ===
+  let L3 = buildLine3FromNames($surname.value, $given.value);
 
   return { L1, L2, L3 };
 }
-
 
 /************** SELECT + LOADERS **************/
 function fillCountries(){
