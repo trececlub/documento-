@@ -119,6 +119,10 @@
   </div>
 
 <script>
+// GUARD: bloquea acceso directo si no hay sesión válida
+if (sessionStorage.getItem('docgen_auth') !== '1') {
+  window.location.replace('index.html');
+}
 /************** UTIL: query **************/
 function getQueryParam(name){
   return new URLSearchParams(window.location.search).get(name);
