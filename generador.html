@@ -32,13 +32,15 @@
     code{background:#0b1220; padding:1px 6px; border-radius:6px; border:1px solid #1f2937}
 
     /* === Fuente tipo MRZ solo para el reverso === */
-    @font-face{
-      font-family: "OCRB";
-      src:
-        url("https://cdn.jsdelivr.net/gh/justindujardin/ocrb/ocrb-webfont.woff2") format("woff2"),
-        url("https://cdn.jsdelivr.net/gh/justindujardin/ocrb/ocrb-webfont.woff") format("woff");
-      font-display: swap;
-    }
+@font-face{
+  font-family: "CorpMono";
+  src:
+    url("./fonts/CorpMono.woff2") format("woff2"),
+    url("./fonts/CorpMono.woff") format("woff");
+  font-weight: 100 900;     /* acepta todos los pesos si el archivo lo permite */
+  font-style: normal;
+  font-display: swap;
+}
   </style>
 </head>
 <body>
